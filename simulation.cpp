@@ -54,7 +54,7 @@ class Network {
             cout << "Network info:" << endl;
             cout << "N=" << N << endl;
 
-            for (int i = 0; i < N; i++) {
+            for (int i=0; i < N; i++) {
 
                 cout << "Node " << i << ": [";
                 list<int> :: iterator it;
@@ -75,7 +75,7 @@ class Network {
              *  Prints nodes state.
              *  (Used in the simulation context)
              */
-            for (int i = 0; i < N; i++) {
+            for (int i=0; i < N; i++) {
                 cout << i << ":";
                 if (states->at(i) == State::S) {
                     cout << "S ";
@@ -108,40 +108,44 @@ class Network {
             // Store state for each node.
             vector<State>* states = new vector<State>(N, State::S);
 
-            // Keep track of the infection times for each node.
-            vector<int> infection_time(N,-1);
+            // Store nodes that will transit to infected at the next timestep.
+            vector<int> to_infect;
 
-            // Initial infected population.
-            for (int i = 0; i < inits.size(); i++) {
+            // Setup initial infected population.
+            for (int i=0; i < inits.size(); i++) {
                 states->at(inits[i]) = State::I;
             }
 
-            for (int t = 0; t < T; t++) {
+            for (int t=0; t < T; t++) {
 
                 if (verbose) {
                     cout << "t=" << t << endl;
                     this->printNodesState(states);
                 }
 
-                for (int node = 0; node < N; node++) {
-                    
+                for (int node=0; node < N; node++) {
+
                     if (states->at(node) == State::S) {
 
                         for (it = adj_list->at(node).begin(); it != adj_list->at(node).end(); it++) {
 
                             if ((states->at(*it) == State::I) &&
-                                (infection_time[*it] != t) &&
                                 (((double) rand() / (RAND_MAX)) < beta)) {
-
-                                states->at(node) = State::I;
-                                infection_time[node] = t;
+                                
+                                to_infect.push_back(node);
 
                             }
 
                         }
-
                     }
                 }
+
+                // Update states (susceptible -> infected).
+                for (int i=0; i < to_infect.size(); i++) {
+                    states->at(to_infect[i]) = State::I;
+                }
+                to_infect.clear();
+
             }
         }
 };
@@ -170,8 +174,8 @@ class RandomNetwork : public Network {
         RandomNetwork(int n_nodes, double p) : Network(n_nodes) {
 
             // Randomly initialize adjacency list.
-            for (int i = 0; i < N; i++) {
-                for (int j = 0; j < N; j++) {
+            for (int i=0; i < N; i++) {
+                for (int j=0; j < N; j++) {
                     if (i != j) {
                         if (((double) rand() / (RAND_MAX)) < p) {
                             this->addEdge(i,j);
@@ -190,11 +194,10 @@ int main(int argc, char* argv[]) {
     srand(SEED);
 
     SmallNetwork SNet;
-
     SNet.printNetworkInfo();
 
     vector<int> inits {2,8};
-    SNet.simulateSI(10, inits, 0.5, true);
+    SNet.simulateSI(10, inits, 0.7, true);
 
     return 0;
 }
