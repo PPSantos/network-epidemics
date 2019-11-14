@@ -16,23 +16,24 @@ bool isLast(Iter iter, const Cont& cont)
     return (iter != cont.end()) && (next(iter) == cont.end());
 }
 
-class Graph {
+class Network {
     /**
-     *  Undirected graph.
+     *  Undirected Network.
      */
 
-    // Number of nodes.
-    int N;
+    protected:
+        // Number of nodes.
+        int N;
 
-    // Adjacency list.
-    vector<list<int>>* adj_list;
+        // Adjacency list.
+        vector<list<int>>* adj_list;
 
-    // States vector.
-    vector<State>* states;
+        // States vector.
+        vector<State>* states;
 
     public:
 
-        Graph(int n_nodes) {
+        Network(int n_nodes) {
             N = n_nodes;
 
             // Initialize adjacency list.
@@ -42,7 +43,7 @@ class Graph {
             states = new vector<State>(N, State::S);
         }
 
-        ~Graph() {
+        ~Network() {
             delete adj_list;
             delete states;
         }
@@ -57,6 +58,10 @@ class Graph {
         }
 
         void printNodeInfo(int n) {
+            /**
+             *  Prints node info.
+             *  (Infection state and neighbours)
+             */
             cout << "Node " << n << ": (";
             if (states->at(n) == State::S) {
                 cout << "S, [";
@@ -68,7 +73,7 @@ class Graph {
 
             list<int> :: iterator it;
             for (it = adj_list->at(n).begin(); it != adj_list->at(n).end(); it++) {
-                if (isLast(it,adj_list->at(n))) {
+                if (isLast(it, adj_list->at(n))) {
                     cout << *it << "])";	
                 } else {
                     cout << *it << ",";	
@@ -79,37 +84,118 @@ class Graph {
 
         }
 
-        void prinfInfo() {
-            cout << "Graph info:" << endl;
+        void printInfo() {
+            /**
+             *  Prints network info.
+             */
+            cout << "Network info:" << endl;
             for (int i = 0; i < N; i++) {
                 printNodeInfo(i);
             }
+        }
+
+        void simulateSI(int T, vector<int> &inits, double beta) {
+            /**
+             *  Simulates SI epidemic spreading process.
+             *
+             *  Arguments:
+             *      - T: total number of time steps.
+             *      - inits: initial infected population
+             *              (list of intially infected nodes).
+             *      - beta: infection rate.
+             *
+             */
+            list<int> :: iterator it;
+
+            // Keep track of the infection times for each node.
+            vector<int> infection_time(N,-1);
+
+            // Initial infected population.
+            for (int i = 0; i < inits.size(); i++) {
+                states->at(inits[i]) = State::I;
+            }
+
+            for (int t = 0; t < T; t++) {
+
+                cout << "t=" << t << endl;
+                this->printInfo();
+
+                for (int node = 0; node < N; node++) {
+                    
+                    if (states->at(node) == State::S) {
+
+                        for (it = adj_list->at(node).begin(); it != adj_list->at(node).end(); it++) {
+
+                            if ((states->at(*it) == State::I) &&
+                                (infection_time[*it] != t) &&
+                                (((double) rand() / (RAND_MAX)) < beta)) {
+
+                                states->at(node) = State::I;
+                                infection_time[node] = t;
+
+                            }
+
+                        }
+
+                    }
+                }
+            }
+        }
+
+};
+
+class RandomNetwork : public Network {
+
+    public:
+        RandomNetwork(int n_nodes, double p) : Network(n_nodes) {
+
+            // Randomly initialize adjacency list.
+            for (int i = 0; i < Network::N; i++) {
+                for (int j = 0; j < this->N; j++) {
+                    if (i != j) {
+                        if (((double) rand() / (RAND_MAX)) < p) {
+                            this->addEdge(i,j);
+                        }
+                    }
+                }
+            }
+            
         }
 
 };
 
 int main(int argc, char* argv[]) {
 
-    int N = 6;
+    int SEED = 57;
+    srand(SEED);
 
-    Graph G(N);
+    int N = 9;
+
+    Network G(N);
 
     printf("Number of nodes: %d\n", G.getN());
 
-    G.prinfInfo();
-
     G.addEdge(0, 4);
-    G.addEdge(0, 3);
-    G.addEdge(1, 2);
-    G.addEdge(1, 4);
-    G.addEdge(1, 5);
-    G.addEdge(2, 3);
-    G.addEdge(2, 5);
-    G.addEdge(5, 3);
     G.addEdge(5, 4);
+    G.addEdge(6, 4);
+    G.addEdge(1, 4);
+    G.addEdge(1, 2);
+    G.addEdge(4, 3);
+    G.addEdge(3, 7);
+    G.addEdge(8, 7);
+    G.addEdge(8, 3);
 
-    G.prinfInfo();
+    //G.printInfo();
+
+    //RandomNetwork R(N, 0.5);
+
+    //R.prinfInfo();
+
+    vector<int> inits;
+    inits.push_back(2);
+    G.simulateSI(10, inits, 0.5);
+    G.simulateSI(10, inits, 0.5);
 
     return 0;
-    
+
 }
