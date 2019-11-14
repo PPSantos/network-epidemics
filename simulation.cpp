@@ -1,30 +1,15 @@
 #include<iostream>
 #include<list>
-#include<iterator>
 #include<vector>
+#include<iterator>
 
 using namespace std;
 
-void displayAdjList(list<int> adj_list[], int v) {
-  for(int i = 0; i<v; i++) {
-     cout << i << "--->";
-     list<int> :: iterator it;
-     for(it = adj_list[i].begin(); it != adj_list[i].end(); ++it) {
-        cout << *it << " ";
-     }
-     cout << endl;
-   }
-}
-
-void add_edge(list<int> adj_list[], int u, int v) {   //add v into the list u, and u into list v
-   adj_list[u].push_back(v);
-   adj_list[v].push_back(u);
-}
-
 enum State {
-    SUSCEPTIBLE,
-    INFECTED
+    S, // Susceptible.
+    I  // Infected.
 };
+
 
 class Graph {
     /**
@@ -49,7 +34,12 @@ class Graph {
             adj_list = new vector<list<int>>(N);
             
             // Initialize states vector.
-            states = new vector<State>(N);
+            states = new vector<State>(N, State::S);
+        }
+
+        ~Graph() {
+            delete adj_list;
+            delete states;
         }
 
         int getN() {
@@ -60,7 +50,29 @@ class Graph {
             adj_list->at(n1).push_back(n2);
             adj_list->at(n2).push_back(n1);
         }
+
+        void printStates() {
+            cout << "States: ";
+            for (int i = 0; i < (N-1); i++) {
+                if (states->at(i) == State::S) {
+                    cout << i << "-" << "S" << ",";
+                } else if (states->at(i) == State::I) {
+                    cout << i << "-" << "I" << ",";
+                }
+            }
+            if (states->at(N-1) == State::S) {
+                    cout << N-1 << "-" << "S" << endl;
+            } else if (states->at(N-1) == State::I) {
+                    cout << N-1 << "-" << "I" << endl;
+            }
+        }
+
+        void printAdjList() {
+            cout << "Adjacency list: ";
+
+        }
 };
+
 
 int main(int argc, char* argv[]) {
 
@@ -80,7 +92,8 @@ int main(int argc, char* argv[]) {
     G.addEdge(5, 3);
     G.addEdge(5, 4);
 
-    //displayAdjList(adj_list, v);
-    
+    G.printStates();
+
     return 0;
+    
 }
