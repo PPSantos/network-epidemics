@@ -18,7 +18,7 @@ bool isLast(Iter iter, const Cont& cont)
 
 class Network {
     /**
-     *  Undirected Network.
+     *  Base class: Undirected Network.
      */
 
     protected:
@@ -101,7 +101,7 @@ class Network {
              *  Arguments:
              *      - T: total number of time steps.
              *      - inits: initial infected population
-             *              (list of intially infected nodes).
+             *              (list of initially infected nodes).
              *      - beta: infection rate.
              *
              */
@@ -144,8 +144,26 @@ class Network {
 
 };
 
-class RandomNetwork : public Network {
 
+class SmallNetwork : public Network {
+    public:
+        SmallNetwork() : Network(9) {
+
+            this->addEdge(0, 4);
+            this->addEdge(5, 4);
+            this->addEdge(6, 4);
+            this->addEdge(1, 4);
+            this->addEdge(1, 2);
+            this->addEdge(4, 3);
+            this->addEdge(3, 7);
+            this->addEdge(8, 7);
+            this->addEdge(8, 3);
+            
+        }
+};
+
+
+class RandomNetwork : public Network {
     public:
         RandomNetwork(int n_nodes, double p) : Network(n_nodes) {
 
@@ -161,40 +179,23 @@ class RandomNetwork : public Network {
             }
             
         }
-
 };
+
 
 int main(int argc, char* argv[]) {
 
     int SEED = 57;
     srand(SEED);
 
-    int N = 9;
+    //RandomNetwork R(10, 0.5);
+    //R.printInfo();
 
-    Network G(N);
-
-    printf("Number of nodes: %d\n", G.getN());
-
-    G.addEdge(0, 4);
-    G.addEdge(5, 4);
-    G.addEdge(6, 4);
-    G.addEdge(1, 4);
-    G.addEdge(1, 2);
-    G.addEdge(4, 3);
-    G.addEdge(3, 7);
-    G.addEdge(8, 7);
-    G.addEdge(8, 3);
-
-    //G.printInfo();
-
-    //RandomNetwork R(N, 0.5);
-
-    //R.prinfInfo();
+    SmallNetwork SNet;
 
     vector<int> inits;
     inits.push_back(2);
-    G.simulateSI(10, inits, 0.5);
-    G.simulateSI(10, inits, 0.5);
+    inits.push_back(8);
+    SNet.simulateSI(10, inits, 0.5);
 
     return 0;
 
