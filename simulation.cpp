@@ -17,39 +17,28 @@ bool isLast(Iter iter, const Cont& cont)
 }
 
 class Network {
+
     /**
      *  Base class: Undirected Network.
      */
 
     protected:
+
         // Number of nodes.
         int N;
 
         // Adjacency list.
         vector<list<int>>* adj_list;
 
-        // States vector.
-        vector<State>* states;
-
     public:
 
         Network(int n_nodes) {
             N = n_nodes;
-
-            // Initialize adjacency list.
             adj_list = new vector<list<int>>(N);
-            
-            // Initialize states vector.
-            states = new vector<State>(N, State::S);
         }
 
         ~Network() {
             delete adj_list;
-            delete states;
-        }
-
-        int getN() {
-            return N;
         }
 
         void addEdge(int n1, int n2) {
@@ -57,44 +46,52 @@ class Network {
             adj_list->at(n2).push_back(n1);
         }
 
-        void printNodeInfo(int n) {
-            /**
-             *  Prints node info.
-             *  (Infection state and neighbours)
-             */
-            cout << "Node " << n << ": (";
-            if (states->at(n) == State::S) {
-                cout << "S, [";
-            } else if (states->at(n) == State::I) {
-                cout << "I, [";
-            } else {
-                throw "Unknown state";
-            }
-
-            list<int> :: iterator it;
-            for (it = adj_list->at(n).begin(); it != adj_list->at(n).end(); it++) {
-                if (isLast(it, adj_list->at(n))) {
-                    cout << *it << "])";	
-                } else {
-                    cout << *it << ",";	
-                }
-    
-            }
-            cout << endl;
-
-        }
-
-        void printInfo() {
+        void printNetworkInfo() {
             /**
              *  Prints network info.
+             *  (Number of nodes and adjacency list)
              */
             cout << "Network info:" << endl;
+            cout << "N=" << N << endl;
+
             for (int i = 0; i < N; i++) {
-                printNodeInfo(i);
+
+                cout << "Node " << i << ": [";
+                list<int> :: iterator it;
+
+                for (it = adj_list->at(i).begin(); it != adj_list->at(i).end(); it++) {
+                    if (isLast(it, adj_list->at(i))) {
+                        cout << *it << "]";	
+                    } else {
+                        cout << *it << ",";	
+                    }
+                }
+                cout << endl;
             }
         }
 
-        void simulateSI(int T, vector<int> &inits, double beta, bool verbose) {
+        void printNodesState(vector<State>* states) {
+            /**
+             *  Prints nodes state.
+             *  (Used in the simulation context)
+             */
+            for (int i = 0; i < N; i++) {
+                cout << i << ":";
+                if (states->at(i) == State::S) {
+                    cout << "S ";
+                } else if (states->at(i) == State::I) {
+                    cout << "I ";
+                } else {
+                    throw "Unknown state";
+                }
+            }
+            cout << endl;
+        }
+
+        void simulateSI(int T,
+                        vector<int> &inits,
+                        double beta,
+                        bool verbose) {
             /**
              *  Simulates SI epidemic spreading process.
              *
@@ -108,6 +105,9 @@ class Network {
              */
             list<int> :: iterator it;
 
+            // Store state for each node.
+            vector<State>* states = new vector<State>(N, State::S);
+
             // Keep track of the infection times for each node.
             vector<int> infection_time(N,-1);
 
@@ -120,7 +120,7 @@ class Network {
 
                 if (verbose) {
                     cout << "t=" << t << endl;
-                    this->printInfo();
+                    this->printNodesState(states);
                 }
 
                 for (int node = 0; node < N; node++) {
@@ -144,7 +144,6 @@ class Network {
                 }
             }
         }
-
 };
 
 
@@ -190,14 +189,11 @@ int main(int argc, char* argv[]) {
     int SEED = 57;
     srand(SEED);
 
-    RandomNetwork R(10, 0.6);
-    R.printInfo();
-
     SmallNetwork SNet;
 
-    vector<int> inits;
-    inits.push_back(2);
-    inits.push_back(8);
+    SNet.printNetworkInfo();
+
+    vector<int> inits {2,8};
     SNet.simulateSI(10, inits, 0.5, true);
 
     return 0;
