@@ -147,7 +147,90 @@ class Network {
                 to_infect.clear();
 
             }
+
+            delete states;
         }
+
+        void simulateSIS(int T,
+                        vector<int> &inits,
+                        double beta,
+                        double delta,
+                        bool verbose) {
+            /**
+             *  Simulates SI epidemic spreading process.
+             *
+             *  Arguments:
+             *      - T: total number of time steps.
+             *      - inits: initial infected population
+             *              (list of initially infected nodes).
+             *      - beta: infection rate.
+             *      - delta: recovery rate. 
+             *      - verbose: whether to print simulation.
+             *
+             */
+            list<int> :: iterator it;
+
+            // Store state for each node.
+            vector<State>* states = new vector<State>(N, State::S);
+
+            // Store nodes that will transit to
+            // infected stateat the next timestep.
+            vector<int> to_infect;
+
+            // Store nodes that will transit to
+            // susceptible state at the next timestep.
+            vector<int> to_recover;
+
+            // Setup initial infected population.
+            for (int i=0; i < inits.size(); i++) {
+                states->at(inits[i]) = State::I;
+            }
+
+            for (int t=0; t < T; t++) {
+
+                if (verbose) {
+                    cout << "t=" << t << endl;
+                    this->printNodesState(states);
+                }
+
+                for (int node=0; node < N; node++) {
+
+                    if (states->at(node) == State::S) {
+
+                        for (it = adj_list->at(node).begin(); it != adj_list->at(node).end(); it++) {
+
+                            if ((states->at(*it) == State::I) && (((double) rand() / (RAND_MAX)) < beta)) {
+                                to_infect.push_back(node);
+                            }
+
+                        }
+                    } else if (states->at(node) == State::I) {
+
+                        if (((double) rand() / (RAND_MAX)) < beta) {  
+                            to_recover.push_back(node);
+                        }
+                        
+                    }
+                }
+
+                // Update states (susceptible -> infected).
+                for (int i=0; i < to_infect.size(); i++) {
+                    states->at(to_infect[i]) = State::I;
+                }
+                to_infect.clear();
+
+                // Update states (infected -> susceptible).
+                for (int i=0; i < to_recover.size(); i++) {
+                    states->at(to_recover[i]) = State::S;
+                }
+                to_recover.clear();
+
+            }
+
+            delete states;
+        }
+
+
 };
 
 
@@ -190,14 +273,18 @@ class RandomNetwork : public Network {
 
 int main(int argc, char* argv[]) {
 
-    int SEED = 57;
-    srand(SEED);
+    //int SEED = 57;
+    //srand(SEED);
+    srand (time(NULL));
 
     SmallNetwork SNet;
     SNet.printNetworkInfo();
 
     vector<int> inits {2,8};
-    SNet.simulateSI(10, inits, 0.7, true);
+    
+    //SNet.simulateSI(10, inits, 0.7, true);
+
+    SNet.simulateSIS(200, inits, 0.1, 0.9, true);
 
     return 0;
 }
