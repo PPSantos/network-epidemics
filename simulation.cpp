@@ -94,7 +94,7 @@ class Network {
             }
         }
 
-        void simulateSI(int T, vector<int> &inits, double beta) {
+        void simulateSI(int T, vector<int> &inits, double beta, bool verbose) {
             /**
              *  Simulates SI epidemic spreading process.
              *
@@ -103,6 +103,7 @@ class Network {
              *      - inits: initial infected population
              *              (list of initially infected nodes).
              *      - beta: infection rate.
+             *      - verbose: whether to print simulation.
              *
              */
             list<int> :: iterator it;
@@ -117,8 +118,10 @@ class Network {
 
             for (int t = 0; t < T; t++) {
 
-                cout << "t=" << t << endl;
-                this->printInfo();
+                if (verbose) {
+                    cout << "t=" << t << endl;
+                    this->printInfo();
+                }
 
                 for (int node = 0; node < N; node++) {
                     
@@ -168,8 +171,8 @@ class RandomNetwork : public Network {
         RandomNetwork(int n_nodes, double p) : Network(n_nodes) {
 
             // Randomly initialize adjacency list.
-            for (int i = 0; i < Network::N; i++) {
-                for (int j = 0; j < this->N; j++) {
+            for (int i = 0; i < N; i++) {
+                for (int j = 0; j < N; j++) {
                     if (i != j) {
                         if (((double) rand() / (RAND_MAX)) < p) {
                             this->addEdge(i,j);
@@ -187,16 +190,15 @@ int main(int argc, char* argv[]) {
     int SEED = 57;
     srand(SEED);
 
-    //RandomNetwork R(10, 0.5);
-    //R.printInfo();
+    RandomNetwork R(10, 0.6);
+    R.printInfo();
 
     SmallNetwork SNet;
 
     vector<int> inits;
     inits.push_back(2);
     inits.push_back(8);
-    SNet.simulateSI(10, inits, 0.5);
+    SNet.simulateSI(10, inits, 0.5, true);
 
     return 0;
-
 }
