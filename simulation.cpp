@@ -10,6 +10,11 @@ enum State {
     I  // Infected.
 };
 
+template <typename Iter, typename Cont>
+bool isLast(Iter iter, const Cont& cont)
+{
+    return (iter != cont.end()) && (next(iter) == cont.end());
+}
 
 class Graph {
     /**
@@ -51,28 +56,37 @@ class Graph {
             adj_list->at(n2).push_back(n1);
         }
 
-        void printStates() {
-            cout << "States: ";
-            for (int i = 0; i < (N-1); i++) {
-                if (states->at(i) == State::S) {
-                    cout << i << "-" << "S" << ",";
-                } else if (states->at(i) == State::I) {
-                    cout << i << "-" << "I" << ",";
+        void printNodeInfo(int n) {
+            cout << "Node " << n << ": (";
+            if (states->at(n) == State::S) {
+                cout << "S, [";
+            } else if (states->at(n) == State::I) {
+                cout << "I, [";
+            } else {
+                throw "Unknown state";
+            }
+
+            list<int> :: iterator it;
+            for (it = adj_list->at(n).begin(); it != adj_list->at(n).end(); it++) {
+                if (isLast(it,adj_list->at(n))) {
+                    cout << *it << "])";	
+                } else {
+                    cout << *it << ",";	
                 }
+    
             }
-            if (states->at(N-1) == State::S) {
-                    cout << N-1 << "-" << "S" << endl;
-            } else if (states->at(N-1) == State::I) {
-                    cout << N-1 << "-" << "I" << endl;
+            cout << endl;
+
+        }
+
+        void prinfInfo() {
+            cout << "Graph info:" << endl;
+            for (int i = 0; i < N; i++) {
+                printNodeInfo(i);
             }
         }
 
-        void printAdjList() {
-            cout << "Adjacency list: ";
-
-        }
 };
-
 
 int main(int argc, char* argv[]) {
 
@@ -81,6 +95,8 @@ int main(int argc, char* argv[]) {
     Graph G(N);
 
     printf("Number of nodes: %d\n", G.getN());
+
+    G.prinfInfo();
 
     G.addEdge(0, 4);
     G.addEdge(0, 3);
@@ -92,7 +108,7 @@ int main(int argc, char* argv[]) {
     G.addEdge(5, 3);
     G.addEdge(5, 4);
 
-    G.printStates();
+    G.prinfInfo();
 
     return 0;
     
