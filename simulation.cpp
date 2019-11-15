@@ -129,11 +129,12 @@ class Network {
 
                         for (it = adj_list->at(node).begin(); it != adj_list->at(node).end(); it++) {
 
-                            if ((states->at(*it) == State::I) &&
-                                (((double) rand() / (RAND_MAX)) < beta)) {
-                                
-                                to_infect.push_back(node);
+                            if (states->at(*it) == State::I) {
 
+                                if (((double) rand() / (RAND_MAX)) < beta) {
+                                    to_infect.push_back(node);
+                                }
+                                break;
                             }
 
                         }
@@ -199,8 +200,12 @@ class Network {
 
                         for (it = adj_list->at(node).begin(); it != adj_list->at(node).end(); it++) {
 
-                            if ((states->at(*it) == State::I) && (((double) rand() / (RAND_MAX)) < beta)) {
-                                to_infect.push_back(node);
+                            if (states->at(*it) == State::I) {
+
+                                if (((double) rand() / (RAND_MAX)) < beta) {
+                                    to_infect.push_back(node);
+                                }
+                                break;
                             }
 
                         }
@@ -281,10 +286,10 @@ int main(int argc, char* argv[]) {
     SNet.printNetworkInfo();
 
     vector<int> inits {2,8};
-    
-    //SNet.simulateSI(10, inits, 0.7, true);
 
-    SNet.simulateSIS(200, inits, 0.1, 0.9, true);
+    SNet.simulateSI(10, inits, 1.0, true);
+
+    //SNet.simulateSIS(200, inits, 0.1, 0.9, true);
 
     return 0;
 }
