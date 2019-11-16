@@ -2,6 +2,7 @@
 #include<list>
 #include<vector>
 #include<iterator>
+#include <fstream>
 
 using namespace std;
 
@@ -91,7 +92,9 @@ class Network {
         void simulateSI(int T,
                         vector<int> &inits,
                         double beta,
-                        bool verbose) {
+                        bool verbose,
+                        bool writeToFile,
+                        int writeToFileStep) {
             /**
              *  Simulates SI epidemic spreading process.
              *
@@ -101,7 +104,9 @@ class Network {
              *              (list of initially infected nodes).
              *      - beta: infection rate.
              *      - verbose: whether to print simulation.
-             *
+             *      - writeToFile: wheter to write states
+             *                     at each writeToFileStep.
+             *      - writeToFileStep: file writing step.
              */
             list<int> :: iterator it;
 
@@ -119,8 +124,21 @@ class Network {
             for (int t=0; t < T; t++) {
 
                 if (verbose) {
+                    // Print states.
                     cout << "t=" << t << endl;
                     this->printNodesState(states);
+                }
+
+                if (writeToFile && (t % writeToFileStep == 0)) {
+                    // Write states to file.
+                    std::ofstream file;
+                    file.open ("output/states.csv", std::ios_base::app);
+                    for (int i=0; i < (N-1); i++) {
+                        file << states->at(i) << ",";
+                    }
+                    file << states->at(N-1);
+                    file << "\n";
+                    file.close();
                 }
 
                 for (int node=0; node < N; node++) {
@@ -156,7 +174,9 @@ class Network {
                         vector<int> &inits,
                         double beta,
                         double delta,
-                        bool verbose) {
+                        bool verbose,
+                        bool writeToFile,
+                        int writeToFileStep) {
             /**
              *  Simulates SI epidemic spreading process.
              *
@@ -167,6 +187,9 @@ class Network {
              *      - beta: infection rate.
              *      - delta: recovery rate. 
              *      - verbose: whether to print simulation.
+             *      - writeToFile: wheter to write states
+             *                     at each writeToFileStep.
+             *      - writeToFileStep: file writing step.
              *
              */
             list<int> :: iterator it;
@@ -192,6 +215,18 @@ class Network {
                 if (verbose) {
                     cout << "t=" << t << endl;
                     this->printNodesState(states);
+                }
+
+                if (writeToFile && (t % writeToFileStep == 0)) {
+                    // Write states to file.
+                    std::ofstream file;
+                    file.open ("output/states.csv", std::ios_base::app);
+                    for (int i=0; i < (N-1); i++) {
+                        file << states->at(i) << ",";
+                    }
+                    file << states->at(N-1);
+                    file << "\n";
+                    file.close();
                 }
 
                 for (int node=0; node < N; node++) {
@@ -280,16 +315,16 @@ int main(int argc, char* argv[]) {
 
     //int SEED = 57;
     //srand(SEED);
-    srand (time(NULL));
+    srand(time(NULL));
 
     SmallNetwork SNet;
     SNet.printNetworkInfo();
 
     vector<int> inits {2,8};
 
-    SNet.simulateSI(10, inits, 1.0, true);
+    //SNet.simulateSI(10, inits, 1.0, true, true, 1);
 
-    //SNet.simulateSIS(200, inits, 0.1, 0.9, true);
+    SNet.simulateSIS(200, inits, 0.1, 0.9, true, true, 1);
 
     return 0;
 }
