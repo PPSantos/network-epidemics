@@ -1,0 +1,6 @@
+1) create N (e.g. = 10) randomly generated scale free networks.
+2) use created networks to test the disesase spreading without awareness spreading.
+3) use created networks to test the disesase spreading with awareness spreading. (vary betas, delta, awareness spreading speed)
+4) start to vary the topology of both networks.
+
+Extra ideas - media effect on disease spreading; what if the hubs are the initally infected nodes (the same for the infected ones)
