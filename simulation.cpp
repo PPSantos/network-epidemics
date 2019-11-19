@@ -558,7 +558,7 @@ class MultiLayerNetwork {
 						double mu,
 						double lambda,
 						bool verbose,
-						bool writeToFile,
+						bool writeStatesToFile,
 						int writeToFileStep) {
 			/**
 			 *  Simulates SI epidemic spreading process
@@ -587,8 +587,8 @@ class MultiLayerNetwork {
 			 *
 			 *      - verbose: whether to print simulation.
 			 *
-			 *      - writeToFile: wheter to write states
-			 *                     at each writeToFileStep.
+			 *      - writeStatesToFile: wheter to write states
+			 *                     at each writeStatesToFileStep.
 			 *
 			 *      - writeToFileStep: file writing step.
 			 */
@@ -638,17 +638,27 @@ class MultiLayerNetwork {
 						this->printNodesStates(disease_states, awareness_states);
 					}
 
-					/*if (writeToFile && (t % writeToFileStep == 0)) {
-						// Write states to file.
+					if (writeStatesToFile && (t % writeToFileStep == 0)) {
+
+						// Write disease states to file.
 						std::ofstream file;
-						file.open ("output/states.csv", std::ios_base::app);
+						file.open ("output/disease_states.csv", std::ios_base::app);
 						for (int i=0; i < (N-1); i++) {
-							file << states[i] << ",";
+							file << disease_states[i] << ",";
 						}
-						file << states[N-1];
+						file << disease_states[N-1];
 						file << "\n";
 						file.close();
-					}*/
+
+						// Write awareness states to file.
+						file.open ("output/awareness_states.csv", std::ios_base::app);
+						for (int i=0; i < (N-1); i++) {
+							file << awareness_states[i] << ",";
+						}
+						file << awareness_states[N-1];
+						file << "\n";
+						file.close();
+					}
 
 					for (int node=0; node < N; node++) {
 
@@ -881,6 +891,12 @@ int main(int argc, char* argv[]) {
 	// e.g. lambda = 1.0 -> (S,A) don't get infected.
 	double lambda = 1.0;
 
+	// Whether to write nodes' states to file.
+	bool writeStatesToFile = true;
+
+	// Writing to files time-step.
+	int writeToFileStep = 1;
+
 	//srand(SEED);
 	srand(time(NULL));
 
@@ -908,8 +924,8 @@ int main(int argc, char* argv[]) {
 						mu,
 						lambda,
 						VERBOSE,
-						true,
-						1);
+						writeStatesToFile,
+						writeToFileStep);
 
 	}
 
