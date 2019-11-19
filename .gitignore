@@ -109,3 +109,6 @@ venv.bak/
 
 # Mex
 *.mex
+
+# Custom
+output/

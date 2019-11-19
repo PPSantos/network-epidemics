@@ -5,7 +5,7 @@
 #include<list>
 #include<iterator>
 #include<algorithm>
-#include <numeric>
+#include<numeric>
 
 using namespace std;
 
@@ -884,7 +884,7 @@ int main(int argc, char* argv[]) {
 	/**
 	  * Simulation flags & parameters.
 	  */
-	//int SEED = 57;
+	int SEED = 57;
 
 	bool VERBOSE = true;
 
@@ -919,8 +919,8 @@ int main(int argc, char* argv[]) {
 	// Writing to files time-step.
 	int writeToFileStep = 1;
 
-	//srand(SEED);
-	srand(time(NULL));
+	srand(SEED);
+	//srand(time(NULL));
 
 	// Namefiles of the networks to load.
     std::vector<string> networks;
