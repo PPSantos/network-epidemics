@@ -731,6 +731,8 @@ class MultiLayerNetwork {
 						bool verbose,
 						bool writeToFile,
 						int writeToFileStep) {
+
+			throw "Not implemented";
 			/**
 			 *  Simulates SIS epidemic spreading process.
 			 *
@@ -746,6 +748,7 @@ class MultiLayerNetwork {
 			 *      - writeToFileStep: file writing step.
 			 *
 			 */
+			/*
 			std::list<int> :: iterator it;
 
 			// Store state for each node.
@@ -837,7 +840,7 @@ class MultiLayerNetwork {
 
 				}
 
-			}
+			}*/
 
 		}
 
