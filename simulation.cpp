@@ -592,6 +592,7 @@ class MultiLayerNetwork {
 			 *
 			 *      - writeToFileStep: file writing step.
 			 */
+			int counter;
 			std::list<int> :: iterator it;
 
 			// Store the disease state for each node.
@@ -605,6 +606,9 @@ class MultiLayerNetwork {
 
 			// Store nodes that will transit to aware at the next timestep.
 			std::vector<int> to_aware;
+
+			// Infected average ratio per time-step.
+			std::vector<double> infected_ratios(T, 0.0);
 
 			for (int sim=0; sim < numSim; sim++) {
 
@@ -659,6 +663,14 @@ class MultiLayerNetwork {
 						file << "\n";
 						file.close();
 					}
+
+					counter = 0;
+					for (int node=0; node < N; node++) {
+						if (disease_states[node] == Disease_State::I) {
+							counter++;
+						}
+					}
+					infected_ratios[t] += ((float) counter / (float) N) / (float) numSim;
 
 					for (int node=0; node < N; node++) {
 
@@ -730,6 +742,16 @@ class MultiLayerNetwork {
 				}
 
 			}
+
+			// Write infected ratios to file.
+			std::ofstream file;
+			file.open ("output/infected_ratios.csv");
+			for (int i=0; i < (T-1); i++) {
+				file << infected_ratios[i] << ",";
+			}
+			file << infected_ratios[T-1];
+			file << "\n";
+			file.close();
 
 		}
 
