@@ -1,8 +1,11 @@
 #include<iostream>
-#include<list>
+#include<sstream>
+#include<fstream>
 #include<vector>
+#include<list>
 #include<iterator>
-#include <fstream>
+#include<algorithm>
+#include <numeric>
 
 using namespace std;
 
@@ -20,10 +23,10 @@ bool isLast(Iter iter, const Cont& cont)
 class Network {
 
 	/**
-	 *  Base class: Undirected Network.
+	 *  Undirected network class.
 	 */
 
-	protected:
+	private:
 
 		// Number of nodes.
 		int N;
@@ -36,6 +39,43 @@ class Network {
 		Network(int n_nodes) {
 			N = n_nodes;
 			adj_list = new vector<list<int>>(N);
+		}
+
+		Network(string file_name) {
+			/**
+			 *	Loads network from file.
+			 *
+			 *  Arguments:
+			 *		- file_name: file name with network description.
+			 */
+			std::ifstream file(file_name);
+
+			if (file.is_open()) {
+				std::string line;
+
+				// Read number of nodes.
+				getline(file, line);
+				std::istringstream iss(line);
+				if (!(iss >> N)) {
+					throw runtime_error("Error parsing file.");
+				}
+
+				adj_list = new vector<list<int>>(N);
+
+				// Read edges.
+				while (getline(file, line)) {
+
+					std::istringstream iss(line);
+					int n1, n2;
+					if (!(iss >> n1 >> n2)) {
+						throw runtime_error("Error parsing file.");
+					}
+
+					this->addEdge(n1, n2);
+				}
+				file.close();
+			}
+
 		}
 
 		~Network() {
@@ -71,16 +111,16 @@ class Network {
 			}
 		}
 
-		void printNodesState(vector<State>* states) {
+		void printNodesState(std::vector<State> states) {
 			/**
 			 *  Prints nodes state.
 			 *  (Used in the simulation context)
 			 */
 			for (int i=0; i < N; i++) {
 				cout << i << ":";
-				if (states->at(i) == State::S) {
+				if (states[i] == State::S) {
 					cout << "S ";
-				} else if (states->at(i) == State::I) {
+				} else if (states[i] == State::I) {
 					cout << "I ";
 				} else {
 					throw "Unknown state";
@@ -89,8 +129,9 @@ class Network {
 			cout << endl;
 		}
 
-		void simulateSI(int T,
-						vector<int> &inits,
+		void simulateSI(int numSim,
+						int T,
+						double gamma,
 						double beta,
 						bool verbose,
 						bool writeToFile,
@@ -99,91 +140,101 @@ class Network {
 			 *  Simulates SI epidemic spreading process.
 			 *
 			 *  Arguments:
+			 *		- numSim: the number of simulations.
 			 *      - T: total number of time steps.
-			 *      - inits: initial infected population
-			 *              (list of initially infected nodes).
+			 *      - gamma: size of initial infected population.
 			 *      - beta: infection rate.
 			 *      - verbose: whether to print simulation.
 			 *      - writeToFile: wheter to write states
 			 *                     at each writeToFileStep.
 			 *      - writeToFileStep: file writing step.
 			 */
-			list<int> :: iterator it;
+			std::list<int> :: iterator it;
 
 			// Store state for each node.
-			vector<State>* states = new vector<State>(N, State::S);
+			std::vector<State> states(N);
 
 			// Store nodes that will transit to infected at the next timestep.
-			vector<int> to_infect;
+			std::vector<int> to_infect;
 
-			// Setup initial infected population.
-			for (int i=0; i < inits.size(); i++) {
-				states->at(inits[i]) = State::I;
-			}
+			for (int sim=0; sim < numSim; sim++) {
 
-			for (int t=0; t < T; t++) {
+				std::fill(states.begin(), states.end(), State::S);
 
-				if (verbose) {
-					// Print states.
-					cout << "t=" << t << endl;
-					this->printNodesState(states);
+				// Setup initial infected population.
+				// Randomly pick gamma individuals to be initially infected.
+				std::vector<int> dummy(N);
+				std::iota(std::begin(dummy), std::end(dummy), 0);
+				std::random_shuffle(dummy.begin(), dummy.end());
+				for (int i=0; i < gamma; i++) {
+					states[dummy[i]] = State::I;
 				}
 
-				if (writeToFile && (t % writeToFileStep == 0)) {
-					// Write states to file.
-					std::ofstream file;
-					file.open ("output/states.csv", std::ios_base::app);
-					for (int i=0; i < (N-1); i++) {
-						file << states->at(i) << ",";
+				for (int t=0; t < T; t++) {
+
+					if (verbose) {
+						// Print states.
+						cout << "t=" << t << endl;
+						this->printNodesState(states);
 					}
-					file << states->at(N-1);
-					file << "\n";
-					file.close();
-				}
 
-				for (int node=0; node < N; node++) {
+					if (writeToFile && (t % writeToFileStep == 0)) {
+						// Write states to file.
+						std::ofstream file;
+						file.open ("output/states.csv", std::ios_base::app);
+						for (int i=0; i < (N-1); i++) {
+							file << states[i] << ",";
+						}
+						file << states[N-1];
+						file << "\n";
+						file.close();
+					}
 
-					if (states->at(node) == State::S) {
+					for (int node=0; node < N; node++) {
 
-						for (it = adj_list->at(node).begin(); it != adj_list->at(node).end(); it++) {
+						if (states[node] == State::S) {
 
-							if (states->at(*it) == State::I) {
+							for (it = adj_list->at(node).begin(); it != adj_list->at(node).end(); it++) {
 
-								if (((double) rand() / (RAND_MAX)) < beta) {
-									to_infect.push_back(node);
+								if (states[*it] == State::I) {
+
+									if (((double) rand() / (RAND_MAX)) < beta) {
+										to_infect.push_back(node);
+									}
+									break;
 								}
-								break;
-							}
 
+							}
 						}
 					}
-				}
 
-				// Update states (susceptible -> infected).
-				for (int i=0; i < to_infect.size(); i++) {
-					states->at(to_infect[i]) = State::I;
+					// Update states (susceptible -> infected).
+					for (int i=0; i < to_infect.size(); i++) {
+						states[to_infect[i]] = State::I;
+					}
+					to_infect.clear();
+
 				}
-				to_infect.clear();
 
 			}
 
-			delete states;
 		}
 
-		void simulateSIS(int T,
-						vector<int> &inits,
+		void simulateSIS(int numSim,
+						int T,
+						int gamma,
 						double beta,
 						double delta,
 						bool verbose,
 						bool writeToFile,
 						int writeToFileStep) {
 			/**
-			 *  Simulates SI epidemic spreading process.
+			 *  Simulates SIS epidemic spreading process.
 			 *
 			 *  Arguments:
+			 *		- numSim: the number of simulations.
 			 *      - T: total number of time steps.
-			 *      - inits: initial infected population
-			 *              (list of initially infected nodes).
+			 *      - gamma: size of initial infected population.
 			 *      - beta: infection rate.
 			 *      - delta: recovery rate. 
 			 *      - verbose: whether to print simulation.
@@ -192,139 +243,125 @@ class Network {
 			 *      - writeToFileStep: file writing step.
 			 *
 			 */
-			list<int> :: iterator it;
+			std::list<int> :: iterator it;
 
 			// Store state for each node.
-			vector<State>* states = new vector<State>(N, State::S);
+			std::vector<State> states(N);
 
 			// Store nodes that will transit to
 			// infected state at the next timestep.
-			vector<int> to_infect;
+			std::vector<int> to_infect;
 
 			// Store nodes that will transit to
 			// susceptible state at the next timestep.
-			vector<int> to_recover;
+			std::vector<int> to_recover;
 
-			// Setup initial infected population.
-			for (int i=0; i < inits.size(); i++) {
-				states->at(inits[i]) = State::I;
-			}
+			for (int sim=0; sim < numSim; sim++) {
 
-			for (int t=0; t < T; t++) {
+				std::fill(states.begin(), states.end(), State::S);
 
-				if (verbose) {
-					cout << "t=" << t << endl;
-					this->printNodesState(states);
+				// Setup initial infected population.
+				// Randomly pick gamma individuals to be initially infected.
+				std::vector<int> dummy(N);
+				std::iota(std::begin(dummy), std::end(dummy), 0);
+				std::random_shuffle(dummy.begin(), dummy.end());
+				for (int i=0; i < gamma; i++) {
+					states[dummy[i]] = State::I;
 				}
 
-				if (writeToFile && (t % writeToFileStep == 0)) {
-					// Write states to file.
-					std::ofstream file;
-					file.open ("output/states.csv", std::ios_base::app);
-					for (int i=0; i < (N-1); i++) {
-						file << states->at(i) << ",";
+				for (int t=0; t < T; t++) {
+
+					if (verbose) {
+						cout << "t=" << t << endl;
+						this->printNodesState(states);
 					}
-					file << states->at(N-1);
-					file << "\n";
-					file.close();
-				}
 
-				for (int node=0; node < N; node++) {
+					if (writeToFile && (t % writeToFileStep == 0)) {
+						// Write states to file.
+						std::ofstream file;
+						file.open ("output/states.csv", std::ios_base::app);
+						for (int i=0; i < (N-1); i++) {
+							file << states[i] << ",";
+						}
+						file << states[N-1];
+						file << "\n";
+						file.close();
+					}
 
-					if (states->at(node) == State::S) {
+					for (int node=0; node < N; node++) {
 
-						for (it = adj_list->at(node).begin(); it != adj_list->at(node).end(); it++) {
+						if (states[node] == State::S) {
 
-							if (states->at(*it) == State::I) {
+							for (it = adj_list->at(node).begin(); it != adj_list->at(node).end(); it++) {
 
-								if (((double) rand() / (RAND_MAX)) < beta) {
-									to_infect.push_back(node);
+								if (states[*it] == State::I) {
+
+									if (((double) rand() / (RAND_MAX)) < beta) {
+										to_infect.push_back(node);
+									}
+									break;
 								}
-								break;
+
 							}
+						} else if (states[node] == State::I) {
 
+							if (((double) rand() / (RAND_MAX)) < delta) {
+								to_recover.push_back(node);
+							}
+							
 						}
-					} else if (states->at(node) == State::I) {
-
-						if (((double) rand() / (RAND_MAX)) < delta) {  
-							to_recover.push_back(node);
-						}
-						
 					}
-				}
 
-				// Update states (susceptible -> infected).
-				for (int i=0; i < to_infect.size(); i++) {
-					states->at(to_infect[i]) = State::I;
-				}
-				to_infect.clear();
+					// Update states (susceptible -> infected).
+					for (int i=0; i < to_infect.size(); i++) {
+						states[to_infect[i]] = State::I;
+					}
+					to_infect.clear();
 
-				// Update states (infected -> susceptible).
-				for (int i=0; i < to_recover.size(); i++) {
-					states->at(to_recover[i]) = State::S;
+					// Update states (infected -> susceptible).
+					for (int i=0; i < to_recover.size(); i++) {
+						states[to_recover[i]] = State::S;
+					}
+					to_recover.clear();
+
 				}
-				to_recover.clear();
 
 			}
 
-			delete states;
-		}
-
-
-};
-
-
-class SmallNetwork : public Network {
-	public:
-		SmallNetwork() : Network(9) {
-
-			this->addEdge(0, 4);
-			this->addEdge(5, 4);
-			this->addEdge(6, 4);
-			this->addEdge(1, 4);
-			this->addEdge(1, 2);
-			this->addEdge(4, 3);
-			this->addEdge(3, 7);
-			this->addEdge(8, 7);
-			this->addEdge(8, 3);
 			
 		}
-};
 
 
-class RandomNetwork : public Network {
-	public:
-		RandomNetwork(int n_nodes, double p) : Network(n_nodes) {
-
-			// Randomly initialize adjacency list.
-			for (int i=0; i < N; i++) {
-				for (int j=0; j < N; j++) {
-					if (i != j) {
-						if (((double) rand() / (RAND_MAX)) < p) {
-							this->addEdge(i,j);
-						}
-					}
-				}
-			}
-			
-		}
 };
 
 
 int main(int argc, char* argv[]) {
 
-	//int SEED = 57;
-	//srand(SEED);
-	srand(time(NULL));
+	// Flags & parameters.
+	int SEED = 57;
+	bool VERBOSE = true;
 
-	SmallNetwork SNet;
-	SNet.printNetworkInfo();
+	srand(SEED);
+	//srand(time(NULL));
 
-	vector<int> inits {2,8};
+	// Namefiles of the networks to load.
+    std::vector<string> networks;
+    networks.push_back("networks/test_network.txt");
 
-	//SNet.simulateSI(10, inits, 1.0, true, true, 1);
+	for (int i=0; i < networks.size(); i++) {
 
-	SNet.simulateSIS(200, inits, 0.1, 0.9, true, true, 1);
+		if (VERBOSE) {
+			cout << "Loading network: " << networks[i] << endl;
+		}
+
+		// Create network.
+		Network Net(networks[i]);
+	
+		Net.simulateSI(1, 10, 2, 1.0, VERBOSE, true, 1);
+
+		Net.simulateSIS(1, 10, 2, 1.0, 0.0, VERBOSE, true, 1);
+
+	}
 
 	return 0;
 }
