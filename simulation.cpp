@@ -351,8 +351,11 @@ class MultiLayerNetwork {
 		int N;
 
 		// Adjacency lists.
-		vector<list<int>>* disease_net;
-		vector<list<int>>* awareness_net;
+		std::vector<list<int>>* disease_net;
+		std::vector<list<int>>* awareness_net;
+
+		// Network's name.
+		std::string network_name;
 
 	public:
 
@@ -360,18 +363,19 @@ class MultiLayerNetwork {
 			N = n_nodes;
 			disease_net = new vector<list<int>>(N);
 			awareness_net = new vector<list<int>>(N);
+			network_name = "Default";
 		}
 
-		MultiLayerNetwork(string file_name) {
+		MultiLayerNetwork(string net_name) {
 			/**
 			 *	Loads network from file.
 			 *	(Both networks will have the same topology)
 			 *	
 			 *
 			 *  Arguments:
-			 *		- file_name: file name with network description.
+			 *		- net_name: network file name.
 			 */
-			std::ifstream file(file_name);
+			std::ifstream file("networks/" + net_name + ".txt");
 
 			if (file.is_open()) {
 				std::string line;
@@ -401,19 +405,21 @@ class MultiLayerNetwork {
 				file.close();
 			}
 
+			network_name = net_name;
+
 		}
 
-		MultiLayerNetwork(string file_name_1, string file_name_2) {
+		MultiLayerNetwork(string net_name_1, string net_name_2) {
 			/**
 			 *	Loads network from file.
 			 *	(Different networks' topology)
 			 *	
 			 *
 			 *  Arguments:
-			 *		- file_name_1: file name with disease network description.
-			 *		- file_name_2: file name with awareness network description.
+			 *		- net_name_1: file name with disease network description.
+			 *		- net_name_2: file name with awareness network description.
 			 */
-			std::ifstream file(file_name_1);
+			std::ifstream file("networks/" + net_name_1 + ".txt");
 
 			if (file.is_open()) {
 				std::string line;
@@ -441,7 +447,7 @@ class MultiLayerNetwork {
 				file.close();
 			}
 
-			std::ifstream file_2(file_name_2);
+			std::ifstream file_2("networks/" + net_name_2 + ".txt");
 
 			if (file_2.is_open()) {
 				std::string line;
@@ -468,6 +474,8 @@ class MultiLayerNetwork {
 				}
 				file_2.close();
 			}
+
+			network_name = net_name_1 + "_" + net_name_2;
 
 		}
 
@@ -646,7 +654,7 @@ class MultiLayerNetwork {
 
 						// Write disease states to file.
 						std::ofstream file;
-						file.open ("output/disease_states.csv", std::ios_base::app);
+						file.open ("output/" + network_name + "_disease_states.csv", std::ios_base::app);
 						for (int i=0; i < (N-1); i++) {
 							file << disease_states[i] << ",";
 						}
@@ -655,7 +663,7 @@ class MultiLayerNetwork {
 						file.close();
 
 						// Write awareness states to file.
-						file.open ("output/awareness_states.csv", std::ios_base::app);
+						file.open ("output/" + network_name + "_awareness_states.csv", std::ios_base::app);
 						for (int i=0; i < (N-1); i++) {
 							file << awareness_states[i] << ",";
 						}
@@ -745,7 +753,7 @@ class MultiLayerNetwork {
 
 			// Write infected ratios to file.
 			std::ofstream file;
-			file.open ("output/infected_ratios.csv");
+			file.open ("output/" + network_name + "_infected_ratios.csv");
 			for (int i=0; i < (T-1); i++) {
 				file << infected_ratios[i] << ",";
 			}
@@ -886,13 +894,13 @@ int main(int argc, char* argv[]) {
 	  */
 	int SEED = 57;
 
-	bool VERBOSE = true;
+	bool VERBOSE = false;
 
 	// Number of simulations per network.
-	int numSim = 1;
+	int numSim = 500;
 
 	// Total number of steps for each simulation.
-	int simulationSteps = 10;
+	int simulationSteps = 30;
 
 	// Initially infected population size.
 	int gamma = 2;
@@ -902,7 +910,7 @@ int main(int argc, char* argv[]) {
 	int phi = 1;
 
 	// Infection rate: [0,1].
-	double beta = 1.0;
+	double beta = 0.8;
 
 	// Awareness spread rate: [0,1].
 	double mu = 1.0;
@@ -911,10 +919,10 @@ int main(int argc, char* argv[]) {
 	// For (S,A) node: prob of getting infected = beta*(1-lambda).
 	// e.g. lambda = 0.0 -> no effect (no decay).
 	// e.g. lambda = 1.0 -> (S,A) don't get infected.
-	double lambda = 1.0;
+	double lambda = 0.8;
 
 	// Whether to write nodes' states to file.
-	bool writeStatesToFile = true;
+	bool writeStatesToFile = false;
 
 	// Writing to files time-step.
 	int writeToFileStep = 1;
@@ -924,7 +932,8 @@ int main(int argc, char* argv[]) {
 
 	// Namefiles of the networks to load.
     std::vector<string> networks;
-    networks.push_back("networks/test_network.txt");
+    networks.push_back("test_network");
+    // networks.push_back("networks/test_network.txt");
 
 	for (int i=0; i < networks.size(); i++) {
 
