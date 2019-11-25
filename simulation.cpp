@@ -37,11 +37,11 @@ class MultiLayerNetwork {
 		int N;
 
 		// Adjacency lists.
-		std::vector<list<int>>* disease_net;
-		std::vector<list<int>>* awareness_net;
+		vector<list<int>>* disease_net;
+		vector<list<int>>* awareness_net;
 
 		// Network's name.
-		std::string network_name;
+		string network_name;
 
 	public:
 
@@ -62,14 +62,14 @@ class MultiLayerNetwork {
 			 *		- file_name: network file name.
 			 *		- net_name: network name.
 			 */
-			std::ifstream file("networks/" + file_name + ".txt");
+			ifstream file("networks/" + file_name + ".txt");
 
 			if (file.is_open()) {
-				std::string line;
+				string line;
 
 				// Read number of nodes.
 				getline(file, line);
-				std::istringstream iss(line);
+				istringstream iss(line);
 				if (!(iss >> N)) {
 					throw runtime_error("Error parsing file.");
 				}
@@ -80,7 +80,7 @@ class MultiLayerNetwork {
 				// Read edges.
 				while (getline(file, line)) {
 
-					std::istringstream iss(line);
+					istringstream iss(line);
 					int n1, n2;
 					if (!(iss >> n1 >> n2)) {
 						throw runtime_error("Error parsing file.");
@@ -107,14 +107,14 @@ class MultiLayerNetwork {
 			 *		- file_name_2: file name with awareness network description.
 			 *		- net_name: network name.
 			 */
-			std::ifstream file("networks/" + file_name_1 + ".txt");
+			ifstream file("networks/" + file_name_1 + ".txt");
 
 			if (file.is_open()) {
-				std::string line;
+				string line;
 
 				// Read number of nodes.
 				getline(file, line);
-				std::istringstream iss(line);
+				istringstream iss(line);
 				if (!(iss >> N)) {
 					throw runtime_error("Error parsing file.");
 				}
@@ -124,7 +124,7 @@ class MultiLayerNetwork {
 				// Read edges.
 				while (getline(file, line)) {
 
-					std::istringstream iss(line);
+					istringstream iss(line);
 					int n1, n2;
 					if (!(iss >> n1 >> n2)) {
 						throw runtime_error("Error parsing file 1.");
@@ -135,14 +135,14 @@ class MultiLayerNetwork {
 				file.close();
 			}
 
-			std::ifstream file_2("networks/" + file_name_2 + ".txt");
+			ifstream file_2("networks/" + file_name_2 + ".txt");
 
 			if (file_2.is_open()) {
-				std::string line;
+				string line;
 
 				// Read number of nodes.
 				getline(file_2, line);
-				std::istringstream iss(line);
+				istringstream iss(line);
 				if (!(iss >> N)) {
 					throw runtime_error("Error parsing file 2.");
 				}
@@ -152,7 +152,7 @@ class MultiLayerNetwork {
 				// Read edges.
 				while (getline(file_2, line)) {
 
-					std::istringstream iss(line);
+					istringstream iss(line);
 					int n1, n2;
 					if (!(iss >> n1 >> n2)) {
 						throw runtime_error("Error parsing file 2.");
@@ -219,8 +219,8 @@ class MultiLayerNetwork {
 
 		}
 
-		void printNodesStates(std::vector<Disease_State> disease_states,
-							 std::vector<Awareness_State> awareness_states) {
+		void printNodesStates(vector<Disease_State> disease_states,
+							  vector<Awareness_State> awareness_states) {
 			/**
 			 *  Prints nodes state.
 			 *  (Used in the simulation context)
@@ -289,36 +289,36 @@ class MultiLayerNetwork {
 			 *      - writeToFileStep: file writing step.
 			 */
 			int counter;
-			std::list<int> :: iterator it;
+			list<int> :: iterator it;
 
 			// Store the disease state for each node.
-			std::vector<Disease_State> disease_states(N);
+			vector<Disease_State> disease_states(N);
 
 			// Store the awareness state for each node.
-			std::vector<Awareness_State> awareness_states(N);
+			vector<Awareness_State> awareness_states(N);
 
 			// Store nodes that will transit to infected at the next timestep.
-			std::vector<int> to_infect;
+			vector<int> to_infect;
 
 			// Store nodes that will transit to aware at the next timestep.
-			std::vector<int> to_aware;
+			vector<int> to_aware;
 
 			// Infected average ratio per time-step.
-			std::vector<double> infected_ratios(T, 0.0);
+			vector<double> infected_ratios(T, 0.0);
 
 			for (int sim=0; sim < numSim; sim++) {
 
 				// Reset all nodes to (S,U).
-				std::fill(disease_states.begin(), disease_states.end(), Disease_State::S);
-				std::fill(awareness_states.begin(), awareness_states.end(), Awareness_State::U);
+				fill(disease_states.begin(), disease_states.end(), Disease_State::S);
+				fill(awareness_states.begin(), awareness_states.end(), Awareness_State::U);
 
 				// Setup initial infected population.
 				// Randomly pick gamma individuals to be initially infected.
 				// Note that infected nodes are always aware.
 				// Initialize (I,A) nodes.
-				std::vector<int> dummy(N);
-				std::iota(std::begin(dummy), std::end(dummy), 0);
-				std::random_shuffle(dummy.begin(), dummy.end());
+				vector<int> dummy(N);
+				iota(begin(dummy), end(dummy), 0);
+				random_shuffle(dummy.begin(), dummy.end());
 				for (int i=0; i < gamma; i++) {
 					disease_states[dummy[i]] = Disease_State::I;
 					awareness_states[dummy[i]] = Awareness_State::A;
@@ -341,8 +341,8 @@ class MultiLayerNetwork {
 					if (writeStatesToFile && (t % writeToFileStep == 0)) {
 
 						// Write disease states to file.
-						std::ofstream file;
-						file.open ("output/" + network_name + "_disease_states.csv", std::ios_base::app);
+						ofstream file;
+						file.open ("output/" + network_name + "_disease_states.csv", ios_base::app);
 						for (int i=0; i < (N-1); i++) {
 							file << disease_states[i] << ",";
 						}
@@ -351,7 +351,7 @@ class MultiLayerNetwork {
 						file.close();
 
 						// Write awareness states to file.
-						file.open ("output/" + network_name + "_awareness_states.csv", std::ios_base::app);
+						file.open ("output/" + network_name + "_awareness_states.csv", ios_base::app);
 						for (int i=0; i < (N-1); i++) {
 							file << awareness_states[i] << ",";
 						}
@@ -440,7 +440,7 @@ class MultiLayerNetwork {
 			}
 
 			// Write infected ratios to file.
-			std::ofstream file;
+			ofstream file;
 			file.open ("output/" + network_name + "_infected_ratios.csv");
 			for (int i=0; i < (T-1); i++) {
 				file << infected_ratios[i] << ",";
@@ -619,7 +619,7 @@ int main(int argc, char* argv[]) {
 	//srand(time(NULL));
 
 	// Namefiles of the networks to load.
-    std::vector<string> networks;
+    vector<string> networks;
     networks.push_back("graph_0");
 	networks.push_back("graph_1");
 	networks.push_back("graph_2");
@@ -632,7 +632,7 @@ int main(int argc, char* argv[]) {
 	networks.push_back("graph_9");
 
 	// Parameter values.
-    std::vector<double> param_values;
+    vector<double> param_values;
     param_values.push_back(0.1);
     param_values.push_back(0.2);
     param_values.push_back(0.3);
@@ -647,7 +647,7 @@ int main(int argc, char* argv[]) {
 	/**
 	 *	Simulate beta.
 	 */
-	std::string net_name;
+	string net_name;
 
 	for (int i=0; i < param_values.size(); i++) {
 
@@ -658,7 +658,7 @@ int main(int argc, char* argv[]) {
 			cout << "Simulating network: " << networks[j] << endl;
 
 			// Create network (second argument is the network name).
-			net_name = std::to_string(param_values[i]).substr(0,3) + "_" + networks[j];
+			net_name = to_string(param_values[i]).substr(0,3) + "_" + networks[j];
 			MultiLayerNetwork MNet(networks[j], net_name);
 
 			MNet.simulateSI(numSim,
