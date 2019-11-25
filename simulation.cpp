@@ -366,16 +366,17 @@ class MultiLayerNetwork {
 			network_name = "Default";
 		}
 
-		MultiLayerNetwork(string net_name) {
+		MultiLayerNetwork(string file_name, string net_name) {
 			/**
 			 *	Loads network from file.
 			 *	(Both networks will have the same topology)
 			 *	
 			 *
 			 *  Arguments:
-			 *		- net_name: network file name.
+			 *		- file_name: network file name.
+			 *		- net_name: network name.
 			 */
-			std::ifstream file("networks/" + net_name + ".txt");
+			std::ifstream file("networks/" + file_name + ".txt");
 
 			if (file.is_open()) {
 				std::string line;
@@ -409,17 +410,18 @@ class MultiLayerNetwork {
 
 		}
 
-		MultiLayerNetwork(string net_name_1, string net_name_2) {
+		MultiLayerNetwork(string file_name_1, string file_name_2, string net_name) {
 			/**
 			 *	Loads network from file.
 			 *	(Different networks' topology)
 			 *	
 			 *
 			 *  Arguments:
-			 *		- net_name_1: file name with disease network description.
-			 *		- net_name_2: file name with awareness network description.
+			 *		- file_name_1: file name with disease network description.
+			 *		- file_name_2: file name with awareness network description.
+			 *		- net_name: network name.
 			 */
-			std::ifstream file("networks/" + net_name_1 + ".txt");
+			std::ifstream file("networks/" + file_name_1 + ".txt");
 
 			if (file.is_open()) {
 				std::string line;
@@ -447,7 +449,7 @@ class MultiLayerNetwork {
 				file.close();
 			}
 
-			std::ifstream file_2("networks/" + net_name_2 + ".txt");
+			std::ifstream file_2("networks/" + file_name_2 + ".txt");
 
 			if (file_2.is_open()) {
 				std::string line;
@@ -475,7 +477,7 @@ class MultiLayerNetwork {
 				file_2.close();
 			}
 
-			network_name = net_name_1 + "_" + net_name_2;
+			network_name = net_name;
 
 		}
 
@@ -897,29 +899,29 @@ int main(int argc, char* argv[]) {
 	bool VERBOSE = false;
 
 	// Number of simulations per network.
-	int numSim = 500;
+	int numSim = 250;
 
 	// Total number of steps for each simulation.
 	int simulationSteps = 50;
 
 	// Initially infected population size.
-	int gamma = 2;
+	int gamma = 10;
 
 	// Initially aware population size
 	// (not counting with infected nodes).
-	int phi = 1;
+	int phi = 0;
 
 	// Infection rate: [0,1].
-	double beta = 0.8;
+	//double beta = 0.8;
 
 	// Awareness spread rate: [0,1].
-	double mu = 1.0;
+	double mu = 0.0;
 
 	// Decay in infection rate for aware nodes: [0,1]
 	// For (S,A) node: prob of getting infected = beta*(1-lambda).
 	// e.g. lambda = 0.0 -> no effect (no decay).
 	// e.g. lambda = 1.0 -> (S,A) don't get infected.
-	double lambda = 0.3;
+	double lambda = 0.0;
 
 	// Whether to write nodes' states to file.
 	bool writeStatesToFile = false;
@@ -943,23 +945,48 @@ int main(int argc, char* argv[]) {
 	networks.push_back("graph_8");
 	networks.push_back("graph_9");
 
-	for (int i=0; i < networks.size(); i++) {
+	// Parameter values.
+    std::vector<double> param_values;
+    param_values.push_back(0.1);
+    param_values.push_back(0.2);
+    param_values.push_back(0.3);
+    param_values.push_back(0.4);
+    param_values.push_back(0.5);
+    param_values.push_back(0.6);
+    param_values.push_back(0.7);
+    param_values.push_back(0.8);
+    param_values.push_back(0.9);
+    param_values.push_back(1.0);
 
-		cout << "Loading network: " << networks[i] << endl;
+	/**
+	 *	Simulate beta.
+	 */
+	std::string net_name;
 
-		// Create network.
-		MultiLayerNetwork MNet(networks[i]);
+	for (int i=0; i < param_values.size(); i++) {
 
-		MNet.simulateSI(numSim,
-						simulationSteps,
-						gamma,
-						phi,
-						beta,
-						mu,
-						lambda,
-						VERBOSE,
-						writeStatesToFile,
-						writeToFileStep);
+		cout << "Beta = " << param_values[i] << endl;
+
+		for (int j=0; j < networks.size(); j++) {
+
+			cout << "Simulating network: " << networks[j] << endl;
+
+			// Create network (second argument is the network name).
+			net_name = std::to_string(param_values[i]).substr(0,3) + "_" + networks[j];
+			MultiLayerNetwork MNet(networks[j], net_name);
+
+			MNet.simulateSI(numSim,
+							simulationSteps,
+							gamma,
+							phi,
+							param_values[i],
+							mu,
+							lambda,
+							VERBOSE,
+							writeStatesToFile,
+							writeToFileStep);
+
+		}
 
 	}
 
