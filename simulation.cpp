@@ -900,7 +900,7 @@ int main(int argc, char* argv[]) {
 	int numSim = 500;
 
 	// Total number of steps for each simulation.
-	int simulationSteps = 30;
+	int simulationSteps = 50;
 
 	// Initially infected population size.
 	int gamma = 2;
@@ -919,7 +919,7 @@ int main(int argc, char* argv[]) {
 	// For (S,A) node: prob of getting infected = beta*(1-lambda).
 	// e.g. lambda = 0.0 -> no effect (no decay).
 	// e.g. lambda = 1.0 -> (S,A) don't get infected.
-	double lambda = 0.8;
+	double lambda = 0.3;
 
 	// Whether to write nodes' states to file.
 	bool writeStatesToFile = false;
@@ -932,21 +932,24 @@ int main(int argc, char* argv[]) {
 
 	// Namefiles of the networks to load.
     std::vector<string> networks;
-    networks.push_back("test_network");
-    // networks.push_back("networks/test_network.txt");
+    networks.push_back("graph_0");
+	networks.push_back("graph_1");
+	networks.push_back("graph_2");
+	networks.push_back("graph_3");
+	networks.push_back("graph_4");
+	networks.push_back("graph_5");
+	networks.push_back("graph_6");
+	networks.push_back("graph_7");
+	networks.push_back("graph_8");
+	networks.push_back("graph_9");
 
 	for (int i=0; i < networks.size(); i++) {
 
-		if (VERBOSE) {
-			cout << "Loading network: " << networks[i] << endl;
-		}
+		cout << "Loading network: " << networks[i] << endl;
 
 		// Create network.
-		//Network Net(networks[i]);
-		//Net.simulateSI(1, 10, 2, 1.0, VERBOSE, true, 1);
-		//Net.simulateSIS(1, 10, 2, 1.0, 0.0, VERBOSE, true, 1);
-
 		MultiLayerNetwork MNet(networks[i]);
+
 		MNet.simulateSI(numSim,
 						simulationSteps,
 						gamma,
