@@ -176,10 +176,60 @@ def plot_threshold_timesteps():
         plt.show()
 
 
+def plot_dIdt():
+
+    fig = plt.figure()
+    fig.set_size_inches(10, 6.0)
+
+    PARAMETERS = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    NUMBER_OF_NETWORKS = 10
+
+    # DISPLAY_STEPS SHOULD BE AT LEAST 1 TIMESTEP SMALLER THAN NUM_TIMESTEPS.
+    NUM_TIMESTEPS = 50
+    DISPLAY_STEPS = 25
+
+    LABELS = []
+
+    scheme = cm.get_cmap("bwr", len(PARAMETERS))
+    colors = scheme(np.linspace(0.0, 1.0, len(PARAMETERS)))
+
+    for (parameter, p) in zip(PARAMETERS, range(len(PARAMETERS))):
+
+        all_data = np.zeros((NUMBER_OF_NETWORKS, NUM_TIMESTEPS))
+
+        LABELS.append("\u03B2=" + str(parameter))
+
+        for net in range(NUMBER_OF_NETWORKS):
+            file_name = "output/{0}_graph_{1}_infected_ratios.csv".format(parameter, net)
+            all_data[net,:] = np.loadtxt(file_name, delimiter=',')
+
+        average = np.mean(all_data, axis=0)
+
+        X = np.arange(0,NUM_TIMESTEPS)
+
+        dI_dt = np.zeros((NUM_TIMESTEPS))
+        # Caculate gradient.
+        for t in range(NUM_TIMESTEPS-1):
+            dI_dt[t] = average[t+1] - average[t]
+
+        #plt.plot(X, Y, color=cpick.to_rgba(parameter))
+        plt.plot(X[:DISPLAY_STEPS], dI_dt[:DISPLAY_STEPS], color=colors[p])
+
+    plt.xlabel('Time step')
+    plt.ylabel('Infected gradient (dI/dt)')
+    plt.title("SI model: \u03C6=0, \u03B3=10, \u03BC=0, \u03BB=0, NumSim=250, Networks(scale free)=10")
+    plt.legend(LABELS)
+    plt.grid()
+    plt.show()
+
+    return
+
 if __name__ == '__main__':
 
     # plot_graph(num_networks=10, file_type='_infected_ratios', display_steps=25)
 
-    # plot_graph_hardcoded()
+    plot_graph_hardcoded()
 
-    plot_threshold_timesteps()
+    # plot_threshold_timesteps()
+
+    plot_dIdt()
