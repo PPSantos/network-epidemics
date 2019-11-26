@@ -455,121 +455,253 @@ class MultiLayerNetwork {
 		void simulateSIS(int numSim,
 						int T,
 						int gamma,
+						int phi,
 						double beta,
-						double delta,
+                        double delta,
+						double mu,
+                        double omega,
+						double lambda,
 						bool verbose,
-						bool writeToFile,
+						bool writeStatesToFile,
 						int writeToFileStep) {
-
-			throw "Not implemented";
 			/**
-			 *  Simulates SIS epidemic spreading process.
+			 *  Simulates SIS epidemic spreading process
+			 *	(two layer network scenario).
 			 *
 			 *  Arguments:
 			 *		- numSim: the number of simulations.
-			 *      - T: total number of time steps.
-			 *      - gamma: size of initial infected population.
-			 *      - beta: infection rate.
-			 *      - delta: recovery rate. 
-			 *      - verbose: whether to print simulation.
-			 *      - writeToFile: wheter to write states
-			 *                     at each writeToFileStep.
-			 *      - writeToFileStep: file writing step.
 			 *
+			 *      - T: total number of time steps.
+			 *
+			 *      - gamma: size of initial infected population.
+			 *
+			 *      - phi: size of initial aware population,
+			 *				excluding the initially infected nodes
+			 *				(because infected are always aware).
+             *
+             *      - beta: infection rate.
+			 *
+			 *      - delta: recovery rate.
+			 *
+			 *		- mu: awareness spread rate.
+             *
+             *		- omega: forgetness rate
+             *                   (how fast susceptible and aware nodes
+             *                    go back to susceptible and unaware).
+			 *
+		     *		- lambda: Value between 0 and 1 (percentage)
+			 *					representing how much beta will decrease
+			 *					if the node is in the (S,A) state.
+			 *				  	I.e., for (S,A) node:
+			 *					probability of getting infected = beta*(1-lambda).
+			 *
+			 *      - verbose: whether to print simulation.
+			 *
+			 *      - writeStatesToFile: wheter to write states
+			 *                     at each writeStatesToFileStep.
+			 *
+			 *      - writeToFileStep: file writing step.
 			 */
-			/*
-			std::list<int> :: iterator it;
+            int counter;
+			list<int> :: iterator it;
 
-			// Store state for each node.
-			std::vector<Disease_State> states(N);
+			// Store the disease state for each node.
+			vector<Disease_State> disease_states(N);
 
+			// Store the awareness state for each node.
+			vector<Awareness_State> awareness_states(N);
 
+			// Store nodes that will transit to infected at the next timestep.
+			vector<int> to_infect;
 
+			// Store nodes that will transit to susceptible state at the next timestep.
+			vector<int> to_susceptible;
 
-			// TODO.
-			std::vector<Awareness_State> awareness_states(N);
+			// Store nodes that will transit to aware at the next timestep.
+			vector<int> to_aware;
 
+			// Store nodes that will transit to unaware at the next timestep.
+			vector<int> to_unaware;
 
-
-			// Store nodes that will transit to
-			// infected state at the next timestep.
-			std::vector<int> to_infect;
-
-			// Store nodes that will transit to
-			// susceptible state at the next timestep.
-			std::vector<int> to_recover;
+			// Infected average ratio per time-step.
+			vector<double> infected_ratios(T, 0.0);
 
 			for (int sim=0; sim < numSim; sim++) {
 
-				std::fill(states.begin(), states.end(), Disease_State::S);
+				// Reset all nodes to (S,U).
+				fill(disease_states.begin(), disease_states.end(), Disease_State::S);
+				fill(awareness_states.begin(), awareness_states.end(), Awareness_State::U);
 
 				// Setup initial infected population.
 				// Randomly pick gamma individuals to be initially infected.
-				std::vector<int> dummy(N);
-				std::iota(std::begin(dummy), std::end(dummy), 0);
-				std::random_shuffle(dummy.begin(), dummy.end());
+				// Note that infected nodes are always aware.
+				// Initialize (I,A) nodes.
+				vector<int> dummy(N);
+				iota(begin(dummy), end(dummy), 0);
+				random_shuffle(dummy.begin(), dummy.end());
 				for (int i=0; i < gamma; i++) {
-					states[dummy[i]] = Disease_State::I;
+					disease_states[dummy[i]] = Disease_State::I;
+					awareness_states[dummy[i]] = Awareness_State::A;
+				}
+
+				// Setup initially aware but not infected nodes.
+				// Initialize (S,A) nodes.
+				for (int i=gamma; i < (gamma + phi); i++) {
+					awareness_states[dummy[i]] = Awareness_State::A;
 				}
 
 				for (int t=0; t < T; t++) {
 
 					if (verbose) {
+						// Print states.
 						cout << "t=" << t << endl;
-						this->printNodesStates(states, awareness_states);
+						this->printNodesStates(disease_states, awareness_states);
 					}
 
-					if (writeToFile && (t % writeToFileStep == 0)) {
-						// Write states to file.
-						std::ofstream file;
-						file.open ("output/states.csv", std::ios_base::app);
+					if (writeStatesToFile && (t % writeToFileStep == 0)) {
+
+						// Write disease states to file.
+						ofstream file;
+						file.open ("output/" + network_name + "_disease_states.csv", ios_base::app);
 						for (int i=0; i < (N-1); i++) {
-							file << states[i] << ",";
+							file << disease_states[i] << ",";
 						}
-						file << states[N-1];
+						file << disease_states[N-1];
+						file << "\n";
+						file.close();
+
+						// Write awareness states to file.
+						file.open ("output/" + network_name + "_awareness_states.csv", ios_base::app);
+						for (int i=0; i < (N-1); i++) {
+							file << awareness_states[i] << ",";
+						}
+						file << awareness_states[N-1];
 						file << "\n";
 						file.close();
 					}
 
+					counter = 0;
+					for (int node=0; node < N; node++) {
+						if (disease_states[node] == Disease_State::I) {
+							counter++;
+						}
+					}
+					infected_ratios[t] += ((float) counter / (float) N) / (float) numSim;
+
 					for (int node=0; node < N; node++) {
 
-						if (states[node] == Disease_State::S) {
+						// Disease network transitions.
+						if (disease_states[node] == Disease_State::S) {
+
+                            // Susceptible node.
 
 							for (it = disease_net->at(node).begin(); it != disease_net->at(node).end(); it++) {
 
-								if (states[*it] == Disease_State::I) {
+								if (disease_states[*it] == Disease_State::I) {
 
-									if (((double) rand() / (RAND_MAX)) < beta) {
-										to_infect.push_back(node);
+									if (awareness_states[node] == Awareness_State::U) {
+										// (S,U) - Susceptible and unaware.
+
+										if (((double) rand() / (RAND_MAX)) < beta) {
+											to_infect.push_back(node);
+											to_aware.push_back(node);
+										}
+										break;
+
+									} else {
+										// (S,A) - Susceptible and aware.
+
+										if (((double) rand() / (RAND_MAX)) < (beta*(1-lambda))) {
+											to_infect.push_back(node);
+											to_aware.push_back(node);
+										}
+										break;
+
 									}
-									break;
+
 								}
 
 							}
-						} else if (states[node] == Disease_State::I) {
 
-							if (((double) rand() / (RAND_MAX)) < delta) {
-								to_recover.push_back(node);
+						} else {
+
+                            // Infected node.
+
+                            if (((double) rand() / (RAND_MAX)) < delta) {
+								to_susceptible.push_back(node);
 							}
-							
-						}
+
+                        }
+
+						// Awareness network transitions.
+						if (awareness_states[node] == Awareness_State::U) {
+							// (S,U) - Susceptible and unaware.
+
+								for (it = awareness_net->at(node).begin(); it != awareness_net->at(node).end(); it++) {
+
+									if (awareness_states[*it] == Awareness_State::A) {
+
+										if (((double) rand() / (RAND_MAX)) < mu) {
+											to_aware.push_back(node);
+										}
+										break;
+									}
+
+								}
+
+						} else {
+
+                            // Aware node.
+
+                            if (disease_states[node] == Disease_State::S) {
+                                // (S,A) - Susceptible and aware.
+                                if (((double) rand() / (RAND_MAX)) < omega) {
+                                    to_unaware.push_back(node);
+                                }
+
+                            }
+
+                        }
+
 					}
 
 					// Update states (susceptible -> infected).
 					for (int i=0; i < to_infect.size(); i++) {
-						states[to_infect[i]] = Disease_State::I;
+						disease_states[to_infect[i]] = Disease_State::I;
 					}
 					to_infect.clear();
 
 					// Update states (infected -> susceptible).
-					for (int i=0; i < to_recover.size(); i++) {
-						states[to_recover[i]] = Disease_State::S;
+					for (int i=0; i < to_susceptible.size(); i++) {
+						disease_states[to_susceptible[i]] = Disease_State::S;
 					}
-					to_recover.clear();
+					to_susceptible.clear();
+
+					// Update states (unaware -> aware).
+					for (int i=0; i < to_aware.size(); i++) {
+						awareness_states[to_aware[i]] = Awareness_State::A;
+					}
+					to_aware.clear();
+
+					// Update states (aware -> unaware).
+					for (int i=0; i < to_unaware.size(); i++) {
+						awareness_states[to_unaware[i]] = Awareness_State::U;
+					}
+					to_unaware.clear();
 
 				}
 
-			}*/
+			}
+
+			// Write infected ratios to file.
+			ofstream file;
+			file.open ("output/" + network_name + "_infected_ratios.csv");
+			for (int i=0; i < (T-1); i++) {
+				file << infected_ratios[i] << ",";
+			}
+			file << infected_ratios[T-1];
+			file << "\n";
+			file.close();
 
 		}
 
