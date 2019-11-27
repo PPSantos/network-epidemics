@@ -284,7 +284,6 @@ def plot_dIdt_2():
                     all_data[0,:] = I[:-1]
                     all_data[1,:] = dI_dt
 
-
                 else:
                     aux = np.zeros((2, NUM_TIMESTEPS-1))
                     aux[0,:] = I[:-1]
@@ -296,7 +295,7 @@ def plot_dIdt_2():
 
     plt.xlabel('Infected percentage')
     plt.ylabel('Infected gradient (dI/dt)')
-    plt.title("SI model: \u03C6=0, \u03B3=10, \u03BC=0, \u03BB=0, NumSim=250, Networks(scale free)=10")
+    plt.title("SI model: \u03C6=0, \u03B3=10, \u03BC=0, \u03BB=0")
     plt.legend(LABELS)
     plt.grid()
     plt.show()
@@ -307,7 +306,7 @@ def plot_dIdt_2():
 
 if __name__ == '__main__':
 
-    #plot_graph(num_networks=10, file_type='_infected_ratios', display_steps=25)
+    # plot_graph(num_networks=10, file_type='_infected_ratios', display_steps=25)
 
     plot_graph_hardcoded()
 
@@ -315,4 +314,4 @@ if __name__ == '__main__':
 
     plot_dIdt()
 
-    plot_dIdt_2()
+    # plot_dIdt_2()
