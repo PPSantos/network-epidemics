@@ -248,10 +248,12 @@ def plot_dIdt_2():
     fig.set_size_inches(10, 6.0)
 
     PARAMETERS = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0]
-    NUMBER_OF_NETWORKS = 3
+    NUMBER_OF_NETWORKS = 5
 
     # DISPLAY_STEPS SHOULD BE AT LEAST 1 TIMESTEP SMALLER THAN NUM_TIMESTEPS.
     NUM_TIMESTEPS = 50
+
+    NUM_SIM = 20
 
     LABELS = []
 
@@ -262,23 +264,33 @@ def plot_dIdt_2():
 
         LABELS.append("\u03B2=" + str(parameter))
 
-        all_data = np.zeros((2, NUM_TIMESTEPS*NUMBER_OF_NETWORKS*50))
-
         for net in range(NUMBER_OF_NETWORKS):
 
-            for i in range(50):
+            for i in range(NUM_SIM):
 
                 file_name = "output/{0}_graph_{1}_{2}_infected_ratios.csv".format(parameter, net, i)
 
                 I = np.loadtxt(file_name, delimiter=',')
 
-                dI_dt = np.zeros((NUM_TIMESTEPS))
+                dI_dt = np.zeros((NUM_TIMESTEPS-1))
                 # Caculate gradient.
                 for t in range(NUM_TIMESTEPS-1):
                     dI_dt[t] = I[t+1] - I[t]
 
-                all_data[0,i*NUM_TIMESTEPS:i*NUM_TIMESTEPS+NUM_TIMESTEPS] = I
-                all_data[1,i*NUM_TIMESTEPS:i*NUM_TIMESTEPS+NUM_TIMESTEPS] = dI_dt
+                if (net == 0 and i == 0):
+
+                    all_data = np.zeros((2, NUM_TIMESTEPS-1))
+
+                    all_data[0,:] = I[:-1]
+                    all_data[1,:] = dI_dt
+
+
+                else:
+                    aux = np.zeros((2, NUM_TIMESTEPS-1))
+                    aux[0,:] = I[:-1]
+                    aux[1,:] = dI_dt
+
+                    all_data = np.concatenate([all_data, aux], axis=1)
 
         plt.scatter(all_data[0,:], all_data[1,:], color=colors[p])
 
