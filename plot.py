@@ -11,6 +11,8 @@ unicode symbols
 \u03B3 - gamma
 \u03BC - mu 
 \u03BB - alfa
+\u0394 - delta
+\u03B2 - beta
 '''
 
 def plot_graph(num_networks, file_type, display_steps):
@@ -25,7 +27,7 @@ def plot_graph(num_networks, file_type, display_steps):
     labels = []
 
     fig = plt.figure()
-    fig.set_size_inches(10, 6.0)
+    fig.set_size_inches(6.5, 4.5)
 
     os.chdir(folder_name)
     # i - additional iterator, iterates over graph number for each parameter value
@@ -85,7 +87,7 @@ def plot_graph_hardcoded():
         Timestep VS infected ratio.
     """
     fig = plt.figure()
-    fig.set_size_inches(10, 6.0)
+    fig.set_size_inches(6.5, 4.5)
 
     PARAMETERS = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
     NUMBER_OF_NETWORKS = 10
@@ -172,7 +174,7 @@ def plot_threshold_timesteps():
         print("ERROR")
     else:
         fig = plt.figure()
-        fig.set_size_inches(10, 6.0)
+        fig.set_size_inches(6.5, 4.5)
 
         plt.plot(PARAMETERS, Y_1, label="80% infected threshold")
         plt.plot(PARAMETERS, Y_2, label="50% infected threshold")
@@ -193,7 +195,8 @@ def plot_dIdt():
         Timestep VS dI/dt.
     """
     fig = plt.figure()
-    fig.set_size_inches(10, 6.0)
+    fig.set_size_inches(6.5, 4.5)
+
 
     PARAMETERS = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
     NUMBER_OF_NETWORKS = 10
@@ -245,7 +248,7 @@ def plot_dIdt_2():
         Infected (I) VS dI/dt.
     """
     fig = plt.figure()
-    fig.set_size_inches(10, 6.0)
+    fig.set_size_inches(6.5, 4.5)
 
     PARAMETERS = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0]
     NUMBER_OF_NETWORKS = 5
@@ -304,14 +307,99 @@ def plot_dIdt_2():
 
     return
 
+def SIS_plot_infected_ratios():
+    """
+        Timestep VS infected ratio.
+    """
+
+    NUM_TIMESTEPS = 50
+
+    DISPLAY_STEPS = 50
+
+    fig = plt.figure()
+    fig.set_size_inches(6.5, 4.5)
+
+    Y = np.loadtxt("output/0.2_0.3_graph_0_infected_ratios.csv", delimiter=',')
+
+    X = np.arange(0, DISPLAY_STEPS)
+
+    plt.plot(X, Y[:DISPLAY_STEPS])
+
+    print(Y[-1])
+
+    plt.xlabel('Time step')
+    plt.ylabel('Infected percentage')
+    plt.title("SI model \n [\u03C6=0, \u03B3=10, \u03BC=0, \u03BB=0]")
+    plt.ylim([0,1])
+    plt.grid()
+    plt.show()
+
+    fig.savefig('img/SIS/test.pdf')
+
+
+def SIS_plot_disease_prevalence():
+    NUM_TIMESTEPS = 40
+    DISPLAY_STEPS = 40
+
+    NUMBER_OF_NETWORKS = 2
+
+    PARAMETERS = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0]
+
+    data = np.zeros((10,10))
+
+    fig = plt.figure()
+    fig.set_size_inches(5.5, 4.0)
+
+    for (beta, i) in zip(PARAMETERS, range(len(PARAMETERS))):
+        for (delta, j) in zip(PARAMETERS, range(len(PARAMETERS))):
+
+            nets_data = np.zeros((NUMBER_OF_NETWORKS))
+
+            for net in range(NUMBER_OF_NETWORKS):
+                file_name = "output/{0}_{1}_graph_{2}_infected_ratios.csv".format(beta, delta, net)
+                nets_data[net] = np.loadtxt(file_name, delimiter=',')[-1]
+
+            data[i, j] = np.average(nets_data)
+
+    data = np.flip(data, axis=0)
+
+    plt.imshow(data, interpolation='bicubic')
+
+    plt.xlabel('Recovery rate (\u0394)')
+    plt.ylabel('Infection rate (\u03B2)')
+    plt.title("SIS model disease prevalence at stationary distribution\n [\u03B3=10]")
+    ticks = np.linspace(0.0,1.0,11)
+    cbar = plt.colorbar()
+    cbar.set_ticks(ticks)
+    cbar.set_label('Infected percentage')
+    plt.clim(0.0,1.0)
+
+    ticks_pos_x = np.arange(0,10)
+    ticks_labels_x = ['0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9', '1.0']
+    plt.xticks(ticks_pos_x, ticks_labels_x)
+
+    ticks_pos_y = np.arange(0,10)
+    ticks_labels_y = ['1.0', '0.9', '0.8', '0.7', '0.6', '0.5', '0.4', '0.3', '0.2', '0.1']
+    plt.yticks(ticks_pos_y, ticks_labels_y)
+
+    plt.grid()
+    plt.show()
+
+    fig.savefig('img/SIS/disease_stationary_prevalence.pdf')
+
+
 if __name__ == '__main__':
 
     # plot_graph(num_networks=10, file_type='_infected_ratios', display_steps=25)
 
-    plot_graph_hardcoded()
+    #plot_graph_hardcoded()
 
-    plot_threshold_timesteps()
+    #plot_threshold_timesteps()
 
-    plot_dIdt()
+    #plot_dIdt()
 
     # plot_dIdt_2()
+
+    SIS_plot_infected_ratios()
+
+    # SIS_plot_disease_prevalence()
