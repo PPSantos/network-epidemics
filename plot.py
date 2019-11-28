@@ -1,18 +1,21 @@
 import glob, os
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcol
 import matplotlib.cm as cm
-#from statsmodels.nonparametric.kernel_regression import KernelReg
 
 '''
 unicode symbols  
-\u03C6 - phi
 \u03B3 - gamma
-\u03BC - mu 
-\u03BB - alfa
-\u0394 - delta
+\u03C6 - phi
 \u03B2 - beta
+\u0394 - delta
+\u03BC - mu 
+\u03A9 - omega
+\u03BB - lambda
+
+\u03BB - alfa
 '''
 
 def plot_graph(num_networks, file_type, display_steps):
@@ -338,14 +341,17 @@ def SIS_plot_infected_ratios():
 
 
 def SIS_plot_disease_prevalence():
+    """
+        SIS_2d_grid_plot
+    """
     NUM_TIMESTEPS = 40
     DISPLAY_STEPS = 40
 
-    NUMBER_OF_NETWORKS = 2
+    NUMBER_OF_NETWORKS = 5
 
-    PARAMETERS = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0]
+    PARAMETERS = [0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0]
 
-    data = np.zeros((10,10))
+    data = np.zeros((11,11))
 
     fig = plt.figure()
     fig.set_size_inches(5.5, 4.0)
@@ -356,36 +362,133 @@ def SIS_plot_disease_prevalence():
             nets_data = np.zeros((NUMBER_OF_NETWORKS))
 
             for net in range(NUMBER_OF_NETWORKS):
-                file_name = "output/{0}_{1}_graph_{2}_infected_ratios.csv".format(beta, delta, net)
+                file_name = "output/SIS_2d_grid_plot/{0}_{1}_graph_{2}_infected_ratios.csv".format(beta, delta, net)
                 nets_data[net] = np.loadtxt(file_name, delimiter=',')[-1]
 
             data[i, j] = np.average(nets_data)
 
-    data = np.flip(data, axis=0)
+    data = np.flip(data, axis=0) * 100
 
     plt.imshow(data, interpolation='bicubic')
 
     plt.xlabel('Recovery rate (\u0394)')
     plt.ylabel('Infection rate (\u03B2)')
     plt.title("SIS model disease prevalence at stationary distribution\n [\u03B3=10]")
-    ticks = np.linspace(0.0,1.0,11)
+    ticks = np.linspace(0,100,11)
     cbar = plt.colorbar()
     cbar.set_ticks(ticks)
-    cbar.set_label('Infected percentage')
-    plt.clim(0.0,1.0)
+    cbar.set_label('Infected percentage (%)')
+    plt.clim(0,100)
 
-    ticks_pos_x = np.arange(0,10)
-    ticks_labels_x = ['0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9', '1.0']
+    plt.xlim([0.0,1.0])
+    plt.ylim([1.0,0.0])
+
+    ticks_pos_x = np.arange(0,11)
+    ticks_labels_x = ['0.0', '0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9', '1.0']
     plt.xticks(ticks_pos_x, ticks_labels_x)
 
-    ticks_pos_y = np.arange(0,10)
-    ticks_labels_y = ['1.0', '0.9', '0.8', '0.7', '0.6', '0.5', '0.4', '0.3', '0.2', '0.1']
+    ticks_pos_y = np.arange(0,11)
+    ticks_labels_y = ['1.0', '0.9', '0.8', '0.7', '0.6', '0.5', '0.4', '0.3', '0.2', '0.1', '0.0']
     plt.yticks(ticks_pos_y, ticks_labels_y)
+
+    fmt_func = lambda x,pos: "{:1.0f}%".format(x)
+    fmt = matplotlib.ticker.FuncFormatter(fmt_func)
+
+    #plt.clabel(contours, inline=True, fontsize=8, fmt=fmt)
+
+    contour = plt.contour(data, levels = [1,50,80], colors='w', legend='sd')
+    contour.clabel(inline=True, fmt=fmt)
 
     plt.grid()
     plt.show()
 
     fig.savefig('img/SIS/disease_stationary_prevalence.pdf')
+
+def plot_SIS_1():
+    """
+        Naive SIS model. FIX beta and vary delta.
+    """
+    fig = plt.figure()
+    fig.set_size_inches(6.5, 4.5)
+
+    PARAMETERS = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    NUMBER_OF_NETWORKS = 10
+    NUM_TIMESTEPS = 25
+
+    DISPLAY_STEPS = 25
+
+    LABELS = []
+
+    scheme = cm.get_cmap("bwr", len(PARAMETERS))
+    colors = scheme(np.linspace(0.0, 1.0, len(PARAMETERS)))
+
+    # Make a user-defined colormap.
+    cm1 = mcol.LinearSegmentedColormap.from_list("MyCmapName",["r","b"])
+
+    # Make a normalizer that will map the time values from
+    # [start_time,end_time+1] -> [0,1].
+    cnorm = mcol.Normalize(vmin=min(PARAMETERS),vmax=max(PARAMETERS))
+
+    for (parameter, p) in zip(PARAMETERS, range(len(PARAMETERS))):
+
+        all_data = np.zeros((NUMBER_OF_NETWORKS, NUM_TIMESTEPS))
+
+        LABELS.append("\u0394=" + str(parameter))
+
+        for net in range(NUMBER_OF_NETWORKS):
+            file_name = "output/naive_SIS_delta_variation/{0}_graph_{1}_infected_ratios.csv".format(parameter, net)
+            all_data[net,:] = np.loadtxt(file_name, delimiter=',')
+
+        average = np.mean(all_data, axis=0)
+        X = np.arange(0, DISPLAY_STEPS)
+        Y = average[:DISPLAY_STEPS] * 100
+
+        plt.plot(X, Y, color=colors[p])
+
+    plt.xlabel('Time step')
+    plt.ylabel('Infected percentage (%)')
+    plt.title("SIS model \n [\u03B3=10, \u03B2=0.4]")
+    plt.legend(LABELS)
+    plt.grid()
+    plt.show()
+
+    fig.savefig('img/SIS/naive_SIS_model_delta_variation.pdf')
+
+    return
+
+def plot_SIS_1_1():
+    """
+        naive sis: vary delta and show stationary distribution change.
+    """
+    NUMBER_OF_NETWORKS = 10
+
+    PARAMETERS = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+
+    fig = plt.figure()
+    fig.set_size_inches(6.5, 4.5)
+
+    results = np.zeros((len(PARAMETERS)))
+
+    for (delta, i) in zip(PARAMETERS, range(len(PARAMETERS))):
+
+        nets_data = np.zeros((NUMBER_OF_NETWORKS))
+
+        for net in range(NUMBER_OF_NETWORKS):
+            file_name = "output/naive_SIS_delta_variation/{0}_graph_{1}_infected_ratios.csv".format(delta, net)
+            nets_data[net] = np.loadtxt(file_name, delimiter=',')[-1]
+
+        results[i] = np.average(nets_data)
+
+    plt.plot(PARAMETERS, results*100)
+
+    plt.xlabel('Recovery rate (\u0394)')
+    plt.ylabel('Infected stationary distributon (%)')
+    plt.title("SIS model \n [\u03B3=10, \u03B2=0.4]")
+    plt.ylim([0,100])
+    plt.grid()
+    plt.show()
+
+    fig.savefig('img/SIS/naive_SIS_model_delta_variation_stationary_dist.pdf')
 
 
 if __name__ == '__main__':
@@ -398,8 +501,12 @@ if __name__ == '__main__':
 
     #plot_dIdt()
 
-    # plot_dIdt_2()
+    #plot_dIdt_2()
 
-    SIS_plot_infected_ratios()
+    #SIS_plot_infected_ratios()
 
-    # SIS_plot_disease_prevalence()
+    #SIS_plot_disease_prevalence()
+
+    #plot_SIS_1()
+
+    plot_SIS_1_1()
