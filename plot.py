@@ -797,7 +797,61 @@ def plot_SIS_mu_2():
     fig.savefig('img/SIS/SIS_model_mu_variation_2.pdf')
 
 
+def plot_infectous_awareness():
+
+    NUMBER_OF_NETWORKS = 10
+
+    PARAMETERS = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    NUM_TIMESTEPS = 100
+    DIS_TIMESTEPS = 25
+
+    fig = plt.figure()
+    fig.set_size_inches(6.5, 4.5)
+
+    timesteps_infections = np.zeros((len(PARAMETERS),NUM_TIMESTEPS))
+    timesteps_awareness = np.zeros((len(PARAMETERS),NUM_TIMESTEPS))
+
+    for (mu, i) in zip(PARAMETERS, range(len(PARAMETERS))):
+
+        nets_data_inf = np.zeros((NUMBER_OF_NETWORKS,NUM_TIMESTEPS))
+        nets_data_awr = np.zeros((NUMBER_OF_NETWORKS,NUM_TIMESTEPS))
+
+        for net in range(NUMBER_OF_NETWORKS):
+            file_name_infection = "output/{0}_graph_{1}_infected_ratios.csv".format(mu, net)
+            nets_data_inf[net,:] = np.loadtxt(file_name_infection, delimiter=',')
+
+            file_name_infection = "output/{0}_graph_{1}_awareness_ratios.csv".format(mu, net)
+            nets_data_awr[net,:] = np.loadtxt(file_name_infection, delimiter=',')
+
+        timesteps_infections[i,:] = np.average(nets_data_inf, axis=0)
+        timesteps_awareness[i,:] = np.average(nets_data_awr, axis=0)
+
+    i = 2
+    plt.plot(range(DIS_TIMESTEPS),timesteps_infections[i,:DIS_TIMESTEPS]*100, label="Infection, \u03BC=" + str(PARAMETERS[i]), color='#0066ff')
+    plt.plot(range(DIS_TIMESTEPS),timesteps_awareness[i,:DIS_TIMESTEPS]*100, '--', label="Awareness, \u03BC="+ str(PARAMETERS[i]), color='#0066ff')
+    j = 7
+    plt.plot(range(DIS_TIMESTEPS),timesteps_infections[j,:DIS_TIMESTEPS]*100, label="Infection, \u03BC=" + str(PARAMETERS[j]), color='#ff3333')
+    plt.plot(range(DIS_TIMESTEPS),timesteps_awareness[j,:DIS_TIMESTEPS]*100, '--', label="Awareness, \u03BC="+ str(PARAMETERS[j]), color='#ff3333')
+    i = 0
+    plt.plot(range(DIS_TIMESTEPS),timesteps_infections[i,:DIS_TIMESTEPS]*100, label="Infection & Awareness \u03BC=0", color='#000000')
+
+    plt.xlabel('Timesteps')
+    plt.ylabel('Percent of population (%)')
+    plt.title("SI model \n [\u03B3=10, \u03C6=5, \u03BB=0.6, \u03B2=0.7]")
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+    fig.savefig('img/SI/infection_awareness_rates.pdf')
+
+
+
+    return
+
+
 if __name__ == '__main__':
 
-    plot_SIS_mu()
+    plot_infectous_awareness()
+
+
 
