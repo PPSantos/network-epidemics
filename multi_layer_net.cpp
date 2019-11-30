@@ -256,7 +256,8 @@ class MultiLayerNetwork {
 						double lambda,
 						bool verbose,
 						bool writeStatesToFile,
-						int writeToFileStep) {
+						int writeToFileStep,
+						bool writeAwarenessRatiosToFile) {
 			/**
 			 *  Simulates SI epidemic spreading process
 			 *	(two layer network scenario).
@@ -288,8 +289,13 @@ class MultiLayerNetwork {
 			 *                     at each writeStatesToFileStep.
 			 *
 			 *      - writeToFileStep: file writing step.
+			 *
+			 *		- writeAwarenessRatiosToFile: whether to write to a file the
+			 *									averaged percentage of aware nodes
+			 *									for each timestep.
 			 */
-			int counter;
+			int infected_counter;
+			int aware_counter;
 			list<int> :: iterator it;
 
 			// Store the disease state for each node.
@@ -306,6 +312,9 @@ class MultiLayerNetwork {
 
 			// Infected average ratio per time-step.
 			vector<double> infected_ratios(T, 0.0);
+
+			// Awareness average ratio per time-step.
+			vector<double> awareness_ratios(T, 0.0);
 
 			for (int sim=0; sim < numSim; sim++) {
 
@@ -361,13 +370,21 @@ class MultiLayerNetwork {
 						file.close();
 					}
 
-					counter = 0;
+					infected_counter = 0;
+					aware_counter = 0;
 					for (int node=0; node < N; node++) {
 						if (disease_states[node] == Disease_State::I) {
-							counter++;
+							infected_counter++;
+						}
+						if (awareness_states[node] == Awareness_State::A) {
+							aware_counter++;
 						}
 					}
-					infected_ratios[t] += ((float) counter / (float) N) / (float) numSim;
+					infected_ratios[t] += ((float) infected_counter / (float) N) / (float) numSim;
+
+					if (writeAwarenessRatiosToFile) {
+						awareness_ratios[t] += ((float) aware_counter / (float) N) / (float) numSim;
+					}
 
 					for (int node=0; node < N; node++) {
 
@@ -449,6 +466,16 @@ class MultiLayerNetwork {
 			file << infected_ratios[T-1];
 			file << "\n";
 			file.close();
+
+			if (writeAwarenessRatiosToFile) {
+				file.open ("output/" + network_name + "_awareness_ratios.csv");
+				for (int i=0; i < (T-1); i++) {
+					file << awareness_ratios[i] << ",";
+				}
+				file << awareness_ratios[T-1];
+				file << "\n";
+				file.close();
+			}
 
 		}
 
