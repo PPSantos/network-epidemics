@@ -20,13 +20,19 @@ int main(int argc, char* argv[]) {
 
 	// Initially aware population size
 	// (not counting with infected nodes).
-	int phi = 0;
+	int phi = 5;
 
 	// Infection rate: [0,1].
-	//double beta = 0.8;
+	double beta = 0.4;
+
+	// Recovery rate: [0,1].
+	double delta = 0.0;
 
 	// Awareness spread rate: [0,1].
 	double mu = 0.0;
+
+	// Forgetness rate: [0,1].
+	double omega = 0.2;
 
 	// Decay in infection rate for aware nodes: [0,1]
 	// For (S,A) node: prob of getting infected = beta*(1-lambda).
@@ -58,6 +64,7 @@ int main(int argc, char* argv[]) {
 
 	// Parameter values.
     vector<double> param_values;
+    param_values.push_back(0.0);
     param_values.push_back(0.1);
     param_values.push_back(0.2);
     param_values.push_back(0.3);
@@ -69,29 +76,29 @@ int main(int argc, char* argv[]) {
     param_values.push_back(0.9);
     param_values.push_back(1.0);
 
-	/**
-	 *	Simulate beta.
-	 */
 	string net_name;
+	int counter;
 
 	for (int i=0; i < param_values.size(); i++) {
 
-		cout << "Beta = " << param_values[i] << endl;
+		cout << "Mu = " << param_values[i] << endl;
 
-		for (int j=0; j < networks.size(); j++) {
+		for (int net=0; net < networks.size(); net++) {
 
-			cout << "Simulating network: " << networks[j] << endl;
+			cout << "Simulating network: " << networks[net] << endl;
 
 			// Create network (second argument is the network name).
-			net_name = to_string(param_values[i]).substr(0,3) + "_" + networks[j];
-			MultiLayerNetwork MNet(networks[j], net_name);
+			net_name = to_string(param_values[i]).substr(0,3) + "_" + networks[net];
+			MultiLayerNetwork MNet(networks[net], net_name);
 
-			MNet.simulateSI(numSim,
+			MNet.simulateSIS(numSim,
 							simulationSteps,
 							gamma,
 							phi,
+							beta,
+							delta,
 							param_values[i],
-							mu,
+							omega,
 							lambda,
 							VERBOSE,
 							writeStatesToFile,
@@ -101,5 +108,63 @@ int main(int argc, char* argv[]) {
 
 	}
 
+	/*string net_name;
+	int counter;
+
+	for (int i=0; i < param_values.size(); i++) {
+
+		cout << "Mu = " << param_values[i] << endl;
+
+		for (int net_1=0; net_1 < networks.size(); net_1++) {
+
+			for (int net_2=0; net_2 < networks.size(); net_2++) {
+
+				if (net_1 == net_2) {
+					continue;
+				}
+
+				cout << "Simulating network: " << networks[net_1] << " with " <<  networks[net_2] << endl;
+
+				// Create network (second argument is the network name).
+				net_name = to_string(param_values[i]).substr(0,3) + "_" + networks[net_1] + "_" + networks[net_2];
+				MultiLayerNetwork MNet(networks[net_1], networks[net_2], net_name);
+
+				MNet.simulateSIS(numSim,
+								simulationSteps,
+								gamma,
+								phi,
+								beta,
+								delta,
+								mu,
+								param_values[i],
+								lambda,
+								VERBOSE,
+								writeStatesToFile,
+								writeToFileStep);
+
+			}
+
+		}
+
+	}*/
+
+	// Create network (second argument is the network name).
+	/*MultiLayerNetwork MNet(networks[0], "Net");
+
+	MNet.simulateSIS(numSim,
+					simulationSteps,
+					gamma,
+					phi,
+					beta,
+					delta,
+					mu,
+					omega,
+					lambda,
+					VERBOSE,
+					writeStatesToFile,
+					writeToFileStep);*/
+
+
 	return 0;
+	
 }
