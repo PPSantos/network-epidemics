@@ -248,16 +248,16 @@ class MultiLayerNetwork {
 		}
 
 		void simulateSI(int numSim,
-						int T,
-						int gamma,
-						int phi,
-						double beta,
-						double mu,
-						double lambda,
-						bool verbose,
-						bool writeStatesToFile,
-						int writeToFileStep,
-						bool writeAwarenessRatiosToFile) {
+				int T,
+				int gamma,
+				int phi,
+				double beta,
+				double mu,
+				double lambda,
+				bool verbose,
+				bool writeStatesToFile,
+				int writeToFileStep,
+				bool writeAwarenessRatiosToFile) {
 			/**
 			 *  Simulates SI epidemic spreading process
 			 *	(two layer network scenario).
@@ -277,7 +277,7 @@ class MultiLayerNetwork {
 			 *
 			 *		- mu: awareness spread rate.
 			 *
-		     *		- lambda: Value between 0 and 1 (percentage)
+		         *		- lambda: Value between 0 and 1 (percentage)
 			 *					representing how much beta will decrease
 			 *					if the node is in the (S,A) state.
 			 *				  	I.e., for (S,A) node:
@@ -480,17 +480,17 @@ class MultiLayerNetwork {
 		}
 
 		void simulateSIS(int numSim,
-						int T,
-						int gamma,
-						int phi,
-						double beta,
-                        double delta,
-						double mu,
-                        double omega,
-						double lambda,
-						bool verbose,
-						bool writeStatesToFile,
-						int writeToFileStep) {
+				int T,
+				int gamma,
+				int phi,
+				double beta,
+                        	double delta,
+				double mu,
+                        	double omega,
+				double lambda,
+				bool verbose,
+				bool writeStatesToFile,
+				int writeToFileStep) {
 			/**
 			 *  Simulates SIS epidemic spreading process
 			 *	(two layer network scenario).
@@ -505,18 +505,18 @@ class MultiLayerNetwork {
 			 *      - phi: size of initial aware population,
 			 *				excluding the initially infected nodes
 			 *				(because infected are always aware).
-             *
-             *      - beta: infection rate.
+             		 *
+             		 *      - beta: infection rate.
 			 *
 			 *      - delta: recovery rate.
 			 *
 			 *		- mu: awareness spread rate.
-             *
-             *		- omega: forgetness rate
-             *                   (how fast susceptible and aware nodes
-             *                    go back to susceptible and unaware).
+             		 *
+            		 *		- omega: forgetness rate
+            		 *                   (how fast susceptible and aware nodes
+            		 *                    go back to susceptible and unaware).
 			 *
-		     *		- lambda: Value between 0 and 1 (percentage)
+		    	 *		- lambda: Value between 0 and 1 (percentage)
 			 *					representing how much beta will decrease
 			 *					if the node is in the (S,A) state.
 			 *				  	I.e., for (S,A) node:
@@ -529,7 +529,7 @@ class MultiLayerNetwork {
 			 *
 			 *      - writeToFileStep: file writing step.
 			 */
-            int counter;
+            		int counter;
 			list<int> :: iterator it;
 
 			// Store the disease state for each node.
@@ -620,7 +620,7 @@ class MultiLayerNetwork {
 						// Disease network transitions.
 						if (disease_states[node] == Disease_State::S) {
 
-                            // Susceptible node.
+                            				// Susceptible node.
 
 							for (it = disease_net->at(node).begin(); it != disease_net->at(node).end(); it++) {
 
